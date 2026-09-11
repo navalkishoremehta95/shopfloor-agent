@@ -19,3 +19,7 @@ Thumbs.db
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+
+# M³-HRC / MIAM local downloads (do not commit)
+data/
+*.zip
