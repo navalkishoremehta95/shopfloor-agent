@@ -14,7 +14,7 @@ Rules → State → Safety → Query → Retrieval → Agent
 |------|------------------|------|--------|
 | 1 | `01_sop_graph` — graph | DAG, $\mathrm{Pred}(s)$, allow rule | done |
 | 2 | `01_sop_graph` — parser | Load `miam_assembly_subset.md`, update $C$ | done |
-| 3 | you write | Risk gate: `hands_clear` for high-risk steps | next |
+| 3 | `02_risk_gate` | Risk gate: `hands_clear` for high-risk steps | done |
 | 4 | you write | `can_start(step_id)` → allowed + reasons | planned |
 | 5 | you write | Load M³-HRC `c1_action_annotations.csv` (local only) | planned |
 | 6 | you write | Replay session vs SOP compliance | planned |
