@@ -42,3 +42,6 @@ MIT (code). M3-HRC dataset: CC BY-NC 4.0 — see dataset page.
 
 <!-- maintenance note -->
 
+
+<!-- sync 2026-09-19 15:04 -->
+
