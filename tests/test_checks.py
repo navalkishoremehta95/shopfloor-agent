@@ -51,3 +51,10 @@ def test_retrieve_title_boost_for_display():
     hits = retrieve(SOP, "where do I put the display", top_k=2)
     assert hits
     assert hits[0][0] in {"STEP-09", "STEP-10"}
+
+
+def test_retrieve_min_score_filters_weak_hits():
+    weak = retrieve(SOP, "display", top_k=5, min_score=0.0)
+    strong = retrieve(SOP, "display", top_k=5, min_score=0.5)
+    assert len(strong) <= len(weak)
+    assert all(score >= 0.5 for _, score, _ in strong)

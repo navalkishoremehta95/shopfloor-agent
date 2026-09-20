@@ -111,7 +111,12 @@ def _tokens(text: str) -> set[str]:
     return {t for t in raw if len(t) > 1 and t not in _STOP}
 
 
-def retrieve(path: str | Path, query: str, top_k: int = 3) -> list[tuple[str, float, str]]:
+def retrieve(
+    path: str | Path,
+    query: str,
+    top_k: int = 3,
+    min_score: float = 0.0,
+) -> list[tuple[str, float, str]]:
     """Rank SOP sections by token overlap. Returns (step_id, score, body)."""
     text = Path(path).read_text(encoding="utf-8")
     q = _tokens(query)
@@ -135,7 +140,8 @@ def retrieve(path: str | Path, query: str, top_k: int = 3) -> list[tuple[str, fl
         title_hits = q & head_toks
         if title_hits:
             score = min(1.0, score + 0.2 * len(title_hits) / len(q))
-        scored.append((step_id, score, body))
+        if score >= min_score:
+            scored.append((step_id, score, body))
 
     scored.sort(key=lambda x: (-x[1], x[0]))
     return scored[:top_k]
