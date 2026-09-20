@@ -84,3 +84,30 @@ def parse_sop(path: str | Path) -> dict[str, Step]:
         steps[step_id] = Step(id=step_id, title=title, pred=pred, risk=risk)
 
     return steps
+
+
+def _tokens(text: str) -> set[str]:
+    return {t for t in "".join(ch.lower() if ch.isalnum() else " " for ch in text).split() if t}
+
+
+def retrieve(path: str | Path, query: str, top_k: int = 3) -> list[tuple[str, float, str]]:
+    """Rank SOP sections by token overlap. Returns (step_id, score, body)."""
+    text = Path(path).read_text(encoding="utf-8")
+    q = _tokens(query)
+    if not q:
+        return []
+
+    scored: list[tuple[str, float, str]] = []
+    for block in text.split("## ")[1:]:
+        body = block.strip()
+        if not body:
+            continue
+        head = body.splitlines()[0].strip()
+        step_id = head.split()[0] if head else "?"
+        overlap = q & _tokens(body)
+        score = len(overlap) / len(q)
+        if score > 0:
+            scored.append((step_id, score, body))
+
+    scored.sort(key=lambda x: (-x[1], x[0]))
+    return scored[:top_k]

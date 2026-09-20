@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from shopfloor import ShopContext, WorkOrder, can_start, complete_step, parse_sop
+from shopfloor import ShopContext, WorkOrder, can_start, complete_step, parse_sop, retrieve
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,3 +38,10 @@ def test_step06_ok_when_hands_clear():
     ok, reasons = complete_step(order, steps["STEP-06"], ctx)
     assert ok is True
     assert "STEP-06" in order.completed
+
+
+def test_retrieve_prefers_fastening_step():
+    hits = retrieve(SOP, "high risk fastening screwdriver hands", top_k=3)
+    assert hits
+    assert hits[0][0] == "STEP-06"
+    assert hits[0][1] > 0
