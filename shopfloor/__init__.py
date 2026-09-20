@@ -86,8 +86,29 @@ def parse_sop(path: str | Path) -> dict[str, Step]:
     return steps
 
 
+_STOP = frozenset(
+    {
+        "a",
+        "an",
+        "the",
+        "to",
+        "for",
+        "of",
+        "in",
+        "on",
+        "do",
+        "i",
+        "where",
+        "how",
+        "is",
+        "and",
+    }
+)
+
+
 def _tokens(text: str) -> set[str]:
-    return {t for t in "".join(ch.lower() if ch.isalnum() else " " for ch in text).split() if t}
+    raw = "".join(ch.lower() if ch.isalnum() else " " for ch in text).split()
+    return {t for t in raw if len(t) > 1 and t not in _STOP}
 
 
 def retrieve(path: str | Path, query: str, top_k: int = 3) -> list[tuple[str, float, str]]:
@@ -104,10 +125,17 @@ def retrieve(path: str | Path, query: str, top_k: int = 3) -> list[tuple[str, fl
             continue
         head = body.splitlines()[0].strip()
         step_id = head.split()[0] if head else "?"
-        overlap = q & _tokens(body)
+        body_toks = _tokens(body)
+        head_toks = _tokens(head)
+        overlap = q & body_toks
+        if not overlap:
+            continue
         score = len(overlap) / len(q)
-        if score > 0:
-            scored.append((step_id, score, body))
+        # prefer hits that match the step title line
+        title_hits = q & head_toks
+        if title_hits:
+            score = min(1.0, score + 0.2 * len(title_hits) / len(q))
+        scored.append((step_id, score, body))
 
     scored.sort(key=lambda x: (-x[1], x[0]))
     return scored[:top_k]

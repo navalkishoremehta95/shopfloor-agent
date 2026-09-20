@@ -45,3 +45,9 @@ def test_retrieve_prefers_fastening_step():
     assert hits
     assert hits[0][0] == "STEP-06"
     assert hits[0][1] > 0
+
+
+def test_retrieve_title_boost_for_display():
+    hits = retrieve(SOP, "where do I put the display", top_k=2)
+    assert hits
+    assert hits[0][0] in {"STEP-09", "STEP-10"}
