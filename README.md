@@ -57,8 +57,6 @@ flowchart TD
     M --> B
 ```
 
-Sense → recognize → track task state → SOP + safety + LLM → **ACT / WAIT / GUIDE** → ROS 2 / cobot → observe again (↺).
-
 ## Layout
 
 ```
