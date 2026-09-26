@@ -8,24 +8,21 @@ See [ROADMAP.md](ROADMAP.md).
 
 ```
 shopfloor/         # parse_sop, can_start, retrieve
-notebooks/
+notebooks/shopfloor_agent.ipynb
 docs/sop_samples/
 tests/
 ```
 
-## Notebooks
+## Notebook
 
-| Notebook | Focus |
-|----------|--------|
-| `notebooks/01_sop_graph.ipynb` | SOP DAG + parser |
-| `notebooks/02_checks.ipynb` | Order + risk gate (`can_start`) |
-| `notebooks/03_retrieve.ipynb` | SOP snippet retrieval |
+[`notebooks/shopfloor_agent.ipynb`](notebooks/shopfloor_agent.ipynb) — order, safety, retrieve, next steps.
 
 ## Setup
 
 ```bash
 pip install -r requirements.txt
 python -m pytest -q
+jupyter notebook notebooks/shopfloor_agent.ipynb
 ```
 
 ## Author
