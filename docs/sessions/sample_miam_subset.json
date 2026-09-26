@@ -1,0 +1,17 @@
+{
+  "id": "session-demo-01",
+  "note": "Derived demo timeline aligned to miam_assembly_subset.md. Not raw M3-HRC video.",
+  "events": [
+    {"t": 0.0, "step": "STEP-01", "hands_clear": true},
+    {"t": 2.5, "step": "STEP-02", "hands_clear": true},
+    {"t": 5.0, "step": "STEP-03", "hands_clear": true},
+    {"t": 7.0, "step": "STEP-04", "hands_clear": true},
+    {"t": 9.0, "step": "STEP-05", "hands_clear": true},
+    {"t": 11.0, "step": "STEP-06", "hands_clear": false},
+    {"t": 12.5, "step": "STEP-06", "hands_clear": true},
+    {"t": 15.0, "step": "STEP-07", "hands_clear": true},
+    {"t": 17.0, "step": "STEP-08", "hands_clear": true},
+    {"t": 19.0, "step": "STEP-09", "hands_clear": true},
+    {"t": 21.0, "step": "STEP-10", "hands_clear": true}
+  ]
+}

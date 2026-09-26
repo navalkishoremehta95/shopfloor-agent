@@ -1,6 +1,7 @@
 """Small helpers for procedure checks.
 
 Order first, then safety for high-risk steps.
+Replay and tool wrappers live in sibling modules.
 """
 
 from __future__ import annotations
