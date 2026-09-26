@@ -59,8 +59,6 @@ flowchart TD
 
 Sense → recognize → track task state → SOP + safety + LLM → **ACT / WAIT / GUIDE** → ROS 2 / cobot → observe again (↺).
 
-**Today in this repo:** SOP parse, order/safety gates, retrieve, session replay, and tool wrappers. Perception, ROS 2, and the live LLM loop are the integration path with M³-HRC.
-
 ## Layout
 
 ```
