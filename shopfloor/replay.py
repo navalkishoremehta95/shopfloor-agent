@@ -48,18 +48,21 @@ class ReplayReport:
     counts: dict[str, int] = field(default_factory=dict)
 
 
+def _truthy(value: Any, default: bool = True) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
 def load_session(path: str | Path) -> list[SessionEvent]:
-    """Load session JSON.
+    """Load session JSON or CSV (`t,action|step,hands_clear`)."""
+    path = Path(path)
+    if path.suffix.lower() == ".csv":
+        return _load_session_csv(path)
 
-    Accepts either mapped step ids::
-
-        {"t": 0, "step": "STEP-01", "hands_clear": true}
-
-    or M³-HRC-style action labels::
-
-        {"t": 0, "action": "take rpi CM", "hands_clear": true}
-    """
-    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    raw = json.loads(path.read_text(encoding="utf-8"))
     events: list[SessionEvent] = []
     for item in raw.get("events", []):
         events.append(
@@ -67,9 +70,31 @@ def load_session(path: str | Path) -> list[SessionEvent]:
                 t=float(item["t"]),
                 step=str(item["step"]) if item.get("step") else None,
                 action=str(item["action"]) if item.get("action") else None,
-                hands_clear=bool(item.get("hands_clear", True)),
+                hands_clear=_truthy(item.get("hands_clear"), True),
             )
         )
+    return events
+
+
+def _load_session_csv(path: Path) -> list[SessionEvent]:
+    import csv
+
+    events: list[SessionEvent] = []
+    with path.open(encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            if not row or not any((v or "").strip() for v in row.values()):
+                continue
+            step = (row.get("step") or "").strip() or None
+            action = (row.get("action") or "").strip() or None
+            events.append(
+                SessionEvent(
+                    t=float(row["t"]),
+                    step=step,
+                    action=action,
+                    hands_clear=_truthy(row.get("hands_clear"), True),
+                )
+            )
     return events
 
 

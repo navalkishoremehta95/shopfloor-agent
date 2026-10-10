@@ -15,7 +15,9 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | `shopfloor/map_actions.py` | Action label → STEP id | done |
 | `shopfloor/decide.py` | ACT / WAIT / GUIDE | done |
 | `shopfloor/replay.py` | Session replay report | done |
-| `python -m shopfloor` | check, retrieve, decide, replay | done |
+| `python -m shopfloor` | check, retrieve, decide, next, replay | done |
+| `shopfloor/next.py` | Ready steps under current state | done |
+| CSV sessions | `docs/sessions/*.csv` load path | done |
 | — | Real M³-HRC labels under `data/` | next |
 | — | LLM tool loop / ROS 2 | later |
 

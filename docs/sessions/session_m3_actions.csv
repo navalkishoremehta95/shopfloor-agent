@@ -1,0 +1,13 @@
+t,action,hands_clear
+0.0,take rpi CM,true
+3.0,take rpi camera,true
+6.0,align rpi camera with CM,true
+8.0,take screwdriver,true
+10.0,screw screw with screwdriver,true
+12.0,take screw,true
+14.0,screw screw with screwdriver,false
+16.0,screw screw with screwdriver,true
+18.0,put rpi camera CM,true
+20.0,put screwdriver,true
+22.0,take display,true
+24.0,put display,true

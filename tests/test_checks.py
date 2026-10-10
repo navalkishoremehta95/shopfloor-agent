@@ -1,4 +1,4 @@
-﻿"""Tests for checks, retrieve, replay, decide, action map."""
+"""Tests for checks, retrieve, replay, decide, action map."""
 
 from pathlib import Path
 
@@ -133,4 +133,20 @@ def test_replay_action_labels_has_guide_and_wait():
     assert "GUIDE" in kinds
     assert "WAIT" in kinds
     assert "ACT" in kinds
+    assert "STEP-10" in report.completed
+
+def test_ready_steps_and_csv_replay():
+    from shopfloor import ShopContext, WorkOrder, parse_sop
+    from shopfloor.next import ready_steps
+    from shopfloor.replay import load_session, replay_report
+
+    steps = parse_sop(SOP)
+    order = WorkOrder(id="WO-n", completed={"STEP-01", "STEP-02", "STEP-03", "STEP-04"})
+    ready = ready_steps(steps, order, ShopContext(hands_clear=True))
+    assert ready == ["STEP-05"]
+
+    csv_path = ROOT / "docs" / "sessions" / "session_m3_actions.csv"
+    report = replay_report(steps, load_session(csv_path))
+    assert report.counts["WAIT"] >= 1
+    assert report.counts["GUIDE"] >= 1
     assert "STEP-10" in report.completed

@@ -10,6 +10,7 @@ from pathlib import Path
 from . import ShopContext, WorkOrder, can_start, parse_sop, retrieve
 from .decide import decide
 from .map_actions import map_action_to_step
+from .next import ready_steps
 from .replay import load_session, report_as_dict, replay_report
 
 
@@ -73,6 +74,24 @@ def _cmd_decide(args: argparse.Namespace) -> int:
     return 0 if d.kind == "ACT" else 1
 
 
+def _cmd_next(args: argparse.Namespace) -> int:
+    steps = parse_sop(args.sop)
+    completed = {s.strip() for s in args.done.split(",") if s.strip()}
+    order = WorkOrder(id="WO-cli", completed=completed)
+    ctx = ShopContext(hands_clear=args.hands_clear)
+    ready = ready_steps(steps, order, ctx)
+    print(
+        json.dumps(
+            {
+                "ready": ready,
+                "titles": {sid: steps[sid].title for sid in ready},
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="shopfloor", description="SOP procedure checks")
     parser.add_argument(
@@ -105,6 +124,11 @@ def main(argv: list[str] | None = None) -> int:
     p_dec.add_argument("--done", default="", help="comma-separated completed step ids")
     p_dec.add_argument("--hands-clear", action="store_true")
     p_dec.set_defaults(func=_cmd_decide)
+
+    p_next = sub.add_parser("next", help="list steps that can start now")
+    p_next.add_argument("--done", default="", help="comma-separated completed step ids")
+    p_next.add_argument("--hands-clear", action="store_true")
+    p_next.set_defaults(func=_cmd_next)
 
     args = parser.parse_args(argv)
     return args.func(args)
