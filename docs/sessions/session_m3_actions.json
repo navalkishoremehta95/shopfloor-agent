@@ -1,0 +1,19 @@
+{
+  "id": "session-m3-actions-01",
+  "note": "M3-HRC-style action labels (not STEP ids). Includes WAIT (hands busy) and GUIDE (skipped predecessor).",
+  "source": "derived from miam_assembly_subset titles",
+  "events": [
+    {"t": 0.0, "action": "take rpi CM", "hands_clear": true},
+    {"t": 3.0, "action": "take rpi camera", "hands_clear": true},
+    {"t": 6.0, "action": "align rpi camera with CM", "hands_clear": true},
+    {"t": 8.0, "action": "take screwdriver", "hands_clear": true},
+    {"t": 10.0, "action": "screw screw with screwdriver", "hands_clear": true},
+    {"t": 12.0, "action": "take screw", "hands_clear": true},
+    {"t": 14.0, "action": "screw screw with screwdriver", "hands_clear": false},
+    {"t": 16.0, "action": "screw screw with screwdriver", "hands_clear": true},
+    {"t": 18.0, "action": "put rpi camera CM", "hands_clear": true},
+    {"t": 20.0, "action": "put screwdriver", "hands_clear": true},
+    {"t": 22.0, "action": "take display", "hands_clear": true},
+    {"t": 24.0, "action": "put display", "hands_clear": true}
+  ]
+}

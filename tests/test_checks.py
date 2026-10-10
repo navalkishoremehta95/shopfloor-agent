@@ -1,15 +1,18 @@
-"""Tests for checks, retrieve, replay, tools."""
+﻿"""Tests for checks, retrieve, replay, decide, action map."""
 
 from pathlib import Path
 
 from shopfloor import ShopContext, WorkOrder, can_start, complete_step, parse_sop, retrieve
-from shopfloor.replay import load_session, replay
+from shopfloor.decide import decide
+from shopfloor.map_actions import map_action_to_step
+from shopfloor.replay import load_session, replay, replay_report
 from shopfloor.tools import TOOL_SPECS, run_tool
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOP = ROOT / "docs" / "sop_samples" / "miam_assembly_subset.md"
 SESSION = ROOT / "docs" / "sessions" / "sample_miam_subset.json"
+SESSION_ACTIONS = ROOT / "docs" / "sessions" / "session_m3_actions.json"
 
 
 def test_parse_has_ten_steps():
@@ -70,7 +73,6 @@ def test_replay_flags_hands_busy_on_step06():
     assert findings
     assert findings[0].step == "STEP-06"
     assert "hands not clear" in findings[0].reasons
-    # second STEP-06 attempt is clear; session should finish without more hits
     assert len(findings) == 1
 
 
@@ -97,3 +99,38 @@ def test_tool_check_and_retrieve():
         "complete_step",
         "retrieve_sop",
     }
+
+
+def test_map_action_titles():
+    steps = parse_sop(SOP)
+    sid, score = map_action_to_step("take rpi CM", steps)
+    assert sid == "STEP-01"
+    assert score > 0.3
+    sid6, _ = map_action_to_step("screw screw with screwdriver", steps)
+    assert sid6 == "STEP-06"
+
+
+def test_decide_wait_guide_act():
+    steps = parse_sop(SOP)
+    done = {f"STEP-{i:02d}" for i in range(1, 6)}
+    order = WorkOrder(id="WO-d", completed=done)
+    wait = decide(steps["STEP-06"], order, ShopContext(hands_clear=False))
+    assert wait.kind == "WAIT"
+    guide = decide(
+        steps["STEP-06"],
+        WorkOrder(id="WO-g", completed={"STEP-01"}),
+        ShopContext(hands_clear=True),
+    )
+    assert guide.kind == "GUIDE"
+    act = decide(steps["STEP-06"], order, ShopContext(hands_clear=True))
+    assert act.kind == "ACT"
+
+
+def test_replay_action_labels_has_guide_and_wait():
+    steps = parse_sop(SOP)
+    report = replay_report(steps, load_session(SESSION_ACTIONS))
+    kinds = [e.decision for e in report.events]
+    assert "GUIDE" in kinds
+    assert "WAIT" in kinds
+    assert "ACT" in kinds
+    assert "STEP-10" in report.completed

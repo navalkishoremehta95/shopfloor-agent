@@ -3,20 +3,21 @@
 SOP grounded in MIAM / M³-HRC.
 
 ```
-Rules → State → Safety → Query → Retrieval → Replay → Tools → CLI
+Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 ```
 
 ## Status
 
 | Piece | Goal | Status |
 |-------|------|--------|
-| `shopfloor_agent.ipynb` | Order + risk gate + retrieve | done |
-| `docs/sessions/` | Sample labeled timeline | done |
-| `shopfloor/replay.py` | Replay session vs SOP | done |
-| `shopfloor/tools.py` | `check_can_start` / `retrieve_sop` tools | done |
-| `python -m shopfloor` | CLI (`check`, `retrieve`, `replay`) | done |
-| — | Swap sample for real M³-HRC export under `data/` | optional |
-| — | FastAPI wrapper | optional |
+| `shopfloor_agent.ipynb` | Order, safety, retrieve, decide, replay | done |
+| `docs/sessions/` | Step-id and action-label samples | done |
+| `shopfloor/map_actions.py` | Action label → STEP id | done |
+| `shopfloor/decide.py` | ACT / WAIT / GUIDE | done |
+| `shopfloor/replay.py` | Session replay report | done |
+| `python -m shopfloor` | check, retrieve, decide, replay | done |
+| — | Real M³-HRC labels under `data/` | next |
+| — | LLM tool loop / ROS 2 | later |
 
 ## Data
 
