@@ -150,3 +150,22 @@ def test_ready_steps_and_csv_replay():
     assert report.counts["WAIT"] >= 1
     assert report.counts["GUIDE"] >= 1
     assert "STEP-10" in report.completed
+
+def test_openai_tools_and_decide_tool():
+    from shopfloor.tools import openai_tools, run_tool
+
+    names = {t["function"]["name"] for t in openai_tools()}
+    assert "decide_action" in names
+    assert "retrieve_sop" in names
+    steps = parse_sop(SOP)
+    out = run_tool(
+        "decide_action",
+        {
+            "action": "screw screw with screwdriver",
+            "completed": [f"STEP-{i:02d}" for i in range(1, 6)],
+            "hands_clear": False,
+        },
+        steps=steps,
+        sop_path=SOP,
+    )
+    assert out["decision"] == "WAIT"

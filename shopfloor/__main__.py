@@ -92,6 +92,18 @@ def _cmd_next(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ask(args: argparse.Namespace) -> int:
+    from .agent import ask
+
+    try:
+        out = ask(args.question, sop_path=args.sop, model=args.model)
+    except RuntimeError as exc:
+        print(json.dumps({"error": str(exc)}))
+        return 2
+    print(json.dumps(out, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="shopfloor", description="SOP procedure checks")
     parser.add_argument(
@@ -129,6 +141,11 @@ def main(argv: list[str] | None = None) -> int:
     p_next.add_argument("--done", default="", help="comma-separated completed step ids")
     p_next.add_argument("--hands-clear", action="store_true")
     p_next.set_defaults(func=_cmd_next)
+
+    p_ask = sub.add_parser("ask", help="LLM + tools (needs OPENAI_API_KEY)")
+    p_ask.add_argument("question")
+    p_ask.add_argument("--model", default=None)
+    p_ask.set_defaults(func=_cmd_ask)
 
     args = parser.parse_args(argv)
     return args.func(args)

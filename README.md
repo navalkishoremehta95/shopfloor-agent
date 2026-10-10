@@ -83,6 +83,8 @@ python -m shopfloor retrieve "high risk fastening"
 python -m shopfloor decide --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
 python -m shopfloor next --done STEP-01,STEP-02,STEP-03,STEP-04 --hands-clear
 python -m shopfloor replay docs/sessions/session_m3_actions.csv
+set OPENAI_API_KEY=...
+python -m shopfloor ask "Can STEP-06 start if STEP-01..05 are done and hands are clear?"
 ```
 
 ## Authors
