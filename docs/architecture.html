@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShopFloor Agent — Architecture</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --ink: #1a1a1a;
+      --muted: #5c5c5c;
+      --line: #c8c2b4;
+      --card: #fffdf8;
+      --accent: #1f4b3a;
+      --accent-soft: #dce8e2;
+      --warn: #7a4a12;
+      --agent: #e8eef5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #ebe6dc 0%, transparent 50%),
+        var(--bg);
+      line-height: 1.45;
+    }
+    header {
+      padding: 1.5rem 1.5rem 0.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header h1 {
+      margin: 0 0 0.35rem;
+      font-size: 1.55rem;
+      letter-spacing: -0.02em;
+    }
+    header p { margin: 0; color: var(--muted); max-width: 42rem; }
+    main {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem 2.5rem;
+    }
+    @media (max-width: 860px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .board {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 0 0 0.85rem;
+    }
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      align-items: stretch;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .arrow {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+    }
+    .node {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+      min-width: 9.5rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.86rem;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+    }
+    .node:hover, .node:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+      outline: none;
+      transform: translateY(-1px);
+    }
+    .node.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+    .node.agent { background: var(--agent); }
+    .node.decision {
+      border-radius: 999px;
+      background: #fff8e8;
+      border-color: #e0c48a;
+    }
+    .node.out-wait { border-color: #b08968; }
+    .node.out-act { border-color: var(--accent); }
+    .node.out-guide { border-color: #3d5a80; }
+    .node.planned {
+      opacity: 0.72;
+      border-style: dashed;
+    }
+    .agent-box {
+      border: 1px dashed #9aa8b8;
+      border-radius: 10px;
+      padding: 0.65rem;
+      background: #f3f6fa;
+    }
+    .agent-box .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 0.45rem;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1.1rem 1.15rem;
+      position: sticky;
+      top: 1rem;
+      min-height: 16rem;
+    }
+    .panel h2 {
+      margin: 0 0 0.4rem;
+      font-size: 1.15rem;
+    }
+    .panel .status {
+      display: inline-block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      margin-bottom: 0.65rem;
+    }
+    .panel .status.planned {
+      background: #eee;
+      color: var(--warn);
+    }
+    .panel p { margin: 0 0 0.85rem; color: var(--ink); }
+    .panel ul {
+      margin: 0 0 0.5rem;
+      padding-left: 1.1rem;
+    }
+    .panel li { margin: 0.25rem 0; }
+    .panel a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+    .panel a:hover { border-bottom-color: var(--accent); }
+    .empty { color: var(--muted); }
+    footer {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ShopFloor Agent — interactive architecture</h1>
+    <p>Click a block for the idea behind it and a jump to the matching code. Dashed blocks are planned interfaces (not in-repo yet).</p>
+  </header>
+
+  <main>
+    <section class="board" aria-label="Architecture diagram">
+      <p class="hint">Sense → recognize → track → agent → decide → act / wait / guide → (robot stack) → observe</p>
+      <div class="flow">
+        <div class="row">
+          <button type="button" class="node planned" data-id="sense">RGB / RGB-D / IMU / Robot State</button>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <button type="button" class="node" data-id="recognize">Action Recognition</button>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <button type="button" class="node" data-id="track">Human + Task State Tracker</button>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="agent-box">
+          <div class="label">ShopFloor Agent</div>
+          <div class="row">
+            <button type="button" class="node agent" data-id="sop">SOP + Task Graph</button>
+            <button type="button" class="node agent" data-id="safety">Safety Rules</button>
+            <button type="button" class="node agent" data-id="llm">LLM Reasoning</button>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <button type="button" class="node decision" data-id="decision">Decision</button>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <button type="button" class="node out-wait" data-id="wait">WAIT</button>
+          <button type="button" class="node out-act" data-id="act">ROBOT ACTION</button>
+          <button type="button" class="node out-guide" data-id="guide">GUIDE HUMAN</button>
+        </div>
+        <div class="arrow">↓ (action path)</div>
+        <div class="row">
+          <button type="button" class="node planned" data-id="ros">ROS 2</button>
+          <button type="button" class="node planned" data-id="moveit">Motion Planner / MoveIt</button>
+          <button type="button" class="node planned" data-id="cobot">Cobot</button>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="row">
+          <button type="button" class="node" data-id="observe">Observe Result</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" id="panel" aria-live="polite">
+      <p class="empty">Select a block on the left.</p>
+    </aside>
+  </main>
+
+  <footer>
+    Repo: <a href="https://github.com/navalkishoremehta95/shopfloor-agent">shopfloor-agent</a>
+    · Open this file locally or via GitHub Pages /
+    <a href="./architecture.html">docs/architecture.html</a>
+  </footer>
+
+  <script>
+    const GH = "https://github.com/navalkishoremehta95/shopfloor-agent/blob/main/";
+    const nodes = {
+      sense: {
+        title: "Sensing",
+        status: "planned",
+        idea: "Multimodal cell state: cameras, depth, IMU, and robot proprioception. Upstream of this repo; feeds action labels and hands-clear context.",
+        links: [
+          { label: "Sample session format (JSON)", path: "docs/sessions/sample_miam_subset.json" },
+          { label: "Sample session format (CSV)", path: "docs/sessions/session_m3_actions.csv" },
+        ],
+      },
+      recognize: {
+        title: "Action recognition → SOP step",
+        status: "in repo",
+        idea: "Map free-text / recognizer action labels onto STEP ids using SOP titles (token overlap). Bridge between perception output and the procedure graph.",
+        links: [
+          { label: "shopfloor/map_actions.py", path: "shopfloor/map_actions.py" },
+        ],
+      },
+      track: {
+        title: "Human + task state",
+        status: "in repo",
+        idea: "Track what is already completed and whether the shared bench is clear. WorkOrder holds completed steps; ShopContext carries hands_clear.",
+        links: [
+          { label: "WorkOrder / ShopContext", path: "shopfloor/__init__.py" },
+          { label: "Session replay", path: "shopfloor/replay.py" },
+        ],
+      },
+      sop: {
+        title: "SOP + task graph",
+        status: "in repo",
+        idea: "Parse procedure markdown into steps with predecessors and risk. This is the authoritative task graph the agent must follow.",
+        links: [
+          { label: "parse_sop()", path: "shopfloor/__init__.py" },
+          { label: "MIAM assembly subset SOP", path: "docs/sop_samples/miam_assembly_subset.md" },
+        ],
+      },
+      safety: {
+        title: "Safety rules",
+        status: "in repo",
+        idea: "Hard checks: predecessors done, and high-risk steps blocked unless hands_clear. Deterministic — not delegated to the LLM.",
+        links: [
+          { label: "can_start / complete_step", path: "shopfloor/__init__.py" },
+        ],
+      },
+      llm: {
+        title: "LLM reasoning (optional)",
+        status: "in repo",
+        idea: "Tool-calling loop over retrieve / decide / next. The model proposes tool use; shopfloor helpers return grounded results and authorize outcomes.",
+        links: [
+          { label: "shopfloor/agent.py", path: "shopfloor/agent.py" },
+          { label: "shopfloor/tools.py", path: "shopfloor/tools.py" },
+          { label: "Hybrid retrieve + citations", path: "shopfloor/rag.py" },
+        ],
+      },
+      decision: {
+        title: "Decision",
+        status: "in repo",
+        idea: "Single control point: ACT, WAIT, or GUIDE from current step attempt, order state, and shop context.",
+        links: [
+          { label: "shopfloor/decide.py", path: "shopfloor/decide.py" },
+          { label: "API POST /decide", path: "shopfloor/api.py" },
+        ],
+      },
+      wait: {
+        title: "WAIT",
+        status: "in repo",
+        idea: "Human still occupies the shared zone (e.g. fastening risk). Robot holds; perception keeps observing.",
+        links: [{ label: "decide() WAIT branch", path: "shopfloor/decide.py" }],
+      },
+      act: {
+        title: "ROBOT ACTION",
+        status: "in repo",
+        idea: "Step is legal and safe. Authorize progress (complete_step / ACT). Robot stack integration is the next interface.",
+        links: [
+          { label: "decide() ACT", path: "shopfloor/decide.py" },
+          { label: "ready_steps()", path: "shopfloor/next.py" },
+        ],
+      },
+      guide: {
+        title: "GUIDE HUMAN",
+        status: "in repo",
+        idea: "Missing predecessors or unknown action — tell the operator what to do next instead of moving the robot.",
+        links: [{ label: "decide() GUIDE branch", path: "shopfloor/decide.py" }],
+      },
+      ros: {
+        title: "ROS 2",
+        status: "planned",
+        idea: "Execution bus between ACT decisions and motion. Not implemented in this repository yet.",
+        links: [{ label: "Roadmap", path: "ROADMAP.md" }],
+      },
+      moveit: {
+        title: "Motion planner / MoveIt",
+        status: "planned",
+        idea: "Turn authorized ACT into collision-aware trajectories. Downstream of this agent.",
+        links: [{ label: "Roadmap", path: "ROADMAP.md" }],
+      },
+      cobot: {
+        title: "Cobot",
+        status: "planned",
+        idea: "Physical shared-bench manipulator. Observes results back into the loop.",
+        links: [{ label: "Roadmap", path: "ROADMAP.md" }],
+      },
+      observe: {
+        title: "Observe result",
+        status: "in repo",
+        idea: "Close the loop: replay labeled timelines, score ACT/WAIT/GUIDE, and feed the next recognition cycle.",
+        links: [
+          { label: "shopfloor/replay.py", path: "shopfloor/replay.py" },
+          { label: "Retrieve eval set", path: "docs/eval/sop_qa.json" },
+        ],
+      },
+    };
+
+    const panel = document.getElementById("panel");
+    const buttons = [...document.querySelectorAll(".node")];
+
+    function render(id) {
+      const n = nodes[id];
+      if (!n) return;
+      buttons.forEach((b) => b.classList.toggle("active", b.dataset.id === id));
+      const planned = n.status === "planned";
+      panel.innerHTML =
+        "<span class=\"status" + (planned ? " planned" : "") + "\">" + n.status + "</span>" +
+        "<h2>" + n.title + "</h2>" +
+        "<p>" + n.idea + "</p>" +
+        "<ul>" +
+        n.links
+          .map(
+            (l) =>
+              "<li><a href=\"" +
+              GH +
+              l.path +
+              "\" target=\"_blank\" rel=\"noopener\">" +
+              l.label +
+              "</a></li>"
+          )
+          .join("") +
+        "</ul>";
+    }
+
+    buttons.forEach((b) =>
+      b.addEventListener("click", () => render(b.dataset.id))
+    );
+
+    render("decision");
+  </script>
+</body>
+</html>
