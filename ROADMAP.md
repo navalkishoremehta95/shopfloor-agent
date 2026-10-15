@@ -20,8 +20,10 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | CSV sessions | `docs/sessions/*.csv` load path | done |
 | `shopfloor/agent.py` | Optional OpenAI tool loop (`ask`) | done |
 | `shopfloor/rag.py` | Hybrid retrieve + citations + eval | done |
+| `shopfloor/api.py` | FastAPI `/retrieve` `/decide` `/next` | done |
+| Docker + GitHub Actions | Image + pytest/eval CI gate | done |
 | — | Real M³-HRC labels under `data/` | next |
-| — | ROS 2 / FastAPI bridge | later |
+| — | ROS 2 bridge | later |
 
 ## Data
 

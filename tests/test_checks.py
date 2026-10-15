@@ -181,3 +181,23 @@ def test_hybrid_retrieve_citation_and_eval():
     report = eval_retrieve(SOP, ROOT / "docs" / "eval" / "sop_qa.json", top_k=3)
     assert report["n"] == 10
     assert report["hit_at_1"] >= 0.7
+
+def test_api_retrieve_and_decide():
+    from fastapi.testclient import TestClient
+    from shopfloor.api import app
+
+    client = TestClient(app)
+    assert client.get("/health").json()["status"] == "ok"
+    r = client.post("/retrieve", json={"query": "high risk fastening", "use_embeddings": False})
+    assert r.status_code == 200
+    assert r.json()["hits"][0]["step_id"] == "STEP-06"
+    assert "citation" in r.json()["hits"][0]
+    d = client.post(
+        "/decide",
+        json={
+            "action": "screw screw with screwdriver",
+            "completed": [f"STEP-{i:02d}" for i in range(1, 6)],
+            "hands_clear": False,
+        },
+    )
+    assert d.json()["decision"] == "WAIT"

@@ -75,6 +75,15 @@ python -m pytest -q
 jupyter notebook notebooks/shopfloor_agent.ipynb
 ```
 
+## API
+
+```bash
+uvicorn shopfloor.api:app --reload
+# POST /retrieve  /decide  /next   GET /health
+docker build -t shopfloor-agent .
+docker run --rm -p 8000:8000 shopfloor-agent
+```
+
 ## CLI
 
 ```bash
