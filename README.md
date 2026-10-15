@@ -1,25 +1,11 @@
 # ShopFloor Agent
 
-Procedure-compliant assembly assistant for MIAM / M3-HRC workflows.
+SOP-grounded coordinator for industrial HRC (MIAM / M³-HRC): map actions to the
+procedure graph, enforce safety, retrieve cited context, return **ACT / WAIT / GUIDE**.
 
 See [ROADMAP.md](ROADMAP.md).
 
-## Motivation
-
-Shared human–robot workcells routinely violate procedure even when perception and motion planning are strong: steps execute out of order, high-risk operations proceed while the operator remains in the shared zone, and the robot advances while the human action is incomplete. Activity recognition alone does not enforce Standard Operating Procedures (SOPs). Unconstrained language models are not an acceptable safety authority.
-
-ShopFloor Agent addresses this gap as a **procedure-compliance and coordination layer** for industrial HRC (grounded in MIAM / M³-HRC). Recognized actions are bound to an SOP task graph; mandatory safety constraints are evaluated; procedure context is retrieved with citations; the system returns a single control decision—**ACT**, **WAIT**, or **GUIDE**. Learned or LLM components may propose; deterministic rules authorize. The intended deployment path is labeled multimodal sessions in, and ROS 2 / motion planning out.
-
-**Claim.** Reliable HRC is limited less by whether a cobot can move than by whether collaboration remains **safe and SOP-compliant** under real operator behavior. This project targets that layer—between multimodal sensing research and a cell that can operate with people.
-
 ## System Architecture
-
-High-level coordination for human–cobot collaboration: activity and task state
-feed SOP knowledge, safety constraints, and optional LLM tool use, then a single
-**ACT / WAIT / GUIDE** decision. Robot execution is intended via ROS 2 / MoveIt.
-
-**Interactive diagram (click a block → idea + code):**
-[docs/architecture.html](docs/architecture.html)
 
 ```mermaid
 flowchart TD
