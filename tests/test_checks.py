@@ -169,3 +169,15 @@ def test_openai_tools_and_decide_tool():
         sop_path=SOP,
     )
     assert out["decision"] == "WAIT"
+
+def test_hybrid_retrieve_citation_and_eval():
+    from shopfloor.rag import eval_retrieve, hybrid_retrieve
+
+    hits = hybrid_retrieve(SOP, "high risk fastening screwdriver", top_k=2, use_embeddings=False)
+    assert hits
+    assert hits[0].step_id == "STEP-06"
+    assert hits[0].citation
+
+    report = eval_retrieve(SOP, ROOT / "docs" / "eval" / "sop_qa.json", top_k=3)
+    assert report["n"] == 10
+    assert report["hit_at_1"] >= 0.7

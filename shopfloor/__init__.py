@@ -118,31 +118,10 @@ def retrieve(
     top_k: int = 3,
     min_score: float = 0.0,
 ) -> list[tuple[str, float, str]]:
-    """Rank SOP sections by token overlap. Returns (step_id, score, body)."""
-    text = Path(path).read_text(encoding="utf-8")
-    q = _tokens(query)
-    if not q:
-        return []
+    """Rank SOP sections (hybrid). Returns (step_id, score, body)."""
+    from .rag import hybrid_retrieve
 
-    scored: list[tuple[str, float, str]] = []
-    for block in text.split("## ")[1:]:
-        body = block.strip()
-        if not body:
-            continue
-        head = body.splitlines()[0].strip()
-        step_id = head.split()[0] if head else "?"
-        body_toks = _tokens(body)
-        head_toks = _tokens(head)
-        overlap = q & body_toks
-        if not overlap:
-            continue
-        score = len(overlap) / len(q)
-        # prefer hits that match the step title line
-        title_hits = q & head_toks
-        if title_hits:
-            score = min(1.0, score + 0.2 * len(title_hits) / len(q))
-        if score >= min_score:
-            scored.append((step_id, score, body))
-
-    scored.sort(key=lambda x: (-x[1], x[0]))
-    return scored[:top_k]
+    return [
+        (h.step_id, h.score, h.body)
+        for h in hybrid_retrieve(path, query, top_k=top_k, min_score=min_score)
+    ]

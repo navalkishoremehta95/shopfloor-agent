@@ -80,6 +80,7 @@ jupyter notebook notebooks/shopfloor_agent.ipynb
 ```bash
 python -m shopfloor check STEP-06 --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
 python -m shopfloor retrieve "high risk fastening"
+python -m shopfloor eval-retrieve
 python -m shopfloor decide --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
 python -m shopfloor next --done STEP-01,STEP-02,STEP-03,STEP-04 --hands-clear
 python -m shopfloor replay docs/sessions/session_m3_actions.csv

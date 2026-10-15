@@ -7,15 +7,17 @@ import json
 import sys
 from pathlib import Path
 
-from . import ShopContext, WorkOrder, can_start, parse_sop, retrieve
+from . import ShopContext, WorkOrder, can_start, parse_sop
 from .decide import decide
 from .map_actions import map_action_to_step
 from .next import ready_steps
+from .rag import eval_retrieve, hits_as_dicts, hybrid_retrieve
 from .replay import load_session, report_as_dict, replay_report
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOP = ROOT / "docs" / "sop_samples" / "miam_assembly_subset.md"
+DEFAULT_EVAL = ROOT / "docs" / "eval" / "sop_qa.json"
 
 
 def _cmd_check(args: argparse.Namespace) -> int:
@@ -29,13 +31,21 @@ def _cmd_check(args: argparse.Namespace) -> int:
 
 
 def _cmd_retrieve(args: argparse.Namespace) -> int:
-    hits = retrieve(args.sop, args.query, top_k=args.top_k, min_score=args.min_score)
-    out = [
-        {"step_id": sid, "score": round(score, 3), "title": body.splitlines()[0]}
-        for sid, score, body in hits
-    ]
-    print(json.dumps(out, indent=2))
+    hits = hybrid_retrieve(
+        args.sop,
+        args.query,
+        top_k=args.top_k,
+        min_score=args.min_score,
+        use_embeddings=not args.no_embeddings,
+    )
+    print(json.dumps(hits_as_dicts(hits), indent=2))
     return 0
+
+
+def _cmd_eval_retrieve(args: argparse.Namespace) -> int:
+    report = eval_retrieve(args.sop, args.cases, top_k=args.top_k)
+    print(json.dumps(report, indent=2))
+    return 0 if report["hit_at_1"] >= args.min_hit_at_1 else 1
 
 
 def _cmd_replay(args: argparse.Namespace) -> int:
@@ -120,11 +130,22 @@ def main(argv: list[str] | None = None) -> int:
     p_check.add_argument("--hands-clear", action="store_true")
     p_check.set_defaults(func=_cmd_check)
 
-    p_ret = sub.add_parser("retrieve", help="search SOP")
+    p_ret = sub.add_parser("retrieve", help="hybrid SOP search with citations")
     p_ret.add_argument("query")
     p_ret.add_argument("--top-k", type=int, default=3)
     p_ret.add_argument("--min-score", type=float, default=0.0)
+    p_ret.add_argument(
+        "--no-embeddings",
+        action="store_true",
+        help="force local dense channel (skip OpenAI embeddings)",
+    )
     p_ret.set_defaults(func=_cmd_retrieve)
+
+    p_eval = sub.add_parser("eval-retrieve", help="run SOP QA retrieve eval")
+    p_eval.add_argument("--cases", type=Path, default=DEFAULT_EVAL)
+    p_eval.add_argument("--top-k", type=int, default=3)
+    p_eval.add_argument("--min-hit-at-1", type=float, default=0.7)
+    p_eval.set_defaults(func=_cmd_eval_retrieve)
 
     p_rep = sub.add_parser("replay", help="replay a session JSON (action or step labels)")
     p_rep.add_argument("session", type=Path)

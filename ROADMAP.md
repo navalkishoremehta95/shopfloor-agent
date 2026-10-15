@@ -19,6 +19,7 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | `shopfloor/next.py` | Ready steps under current state | done |
 | CSV sessions | `docs/sessions/*.csv` load path | done |
 | `shopfloor/agent.py` | Optional OpenAI tool loop (`ask`) | done |
+| `shopfloor/rag.py` | Hybrid retrieve + citations + eval | done |
 | — | Real M³-HRC labels under `data/` | next |
 | — | ROS 2 / FastAPI bridge | later |
 

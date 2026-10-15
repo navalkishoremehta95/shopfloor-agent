@@ -5,16 +5,17 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from . import ShopContext, Step, WorkOrder, can_start, complete_step, retrieve
+from . import ShopContext, Step, WorkOrder, can_start, complete_step
 from .decide import decide
 from .map_actions import map_action_to_step
 from .next import ready_steps
+from .rag import hits_as_dicts, hybrid_retrieve
 
 
 TOOL_SPECS: list[dict[str, Any]] = [
     {
         "name": "retrieve_sop",
-        "description": "Search SOP sections by keyword overlap.",
+        "description": "Hybrid SOP search with citations (lexical + dense).",
         "parameters": {
             "query": {"type": "string"},
             "top_k": {"type": "integer", "default": 3},
@@ -108,22 +109,13 @@ def run_tool(
     sop_path: str | Path,
 ) -> dict[str, Any]:
     if name == "retrieve_sop":
-        hits = retrieve(
+        hits = hybrid_retrieve(
             sop_path,
             str(args["query"]),
             top_k=int(args.get("top_k", 3)),
             min_score=float(args.get("min_score", 0.0)),
         )
-        return {
-            "hits": [
-                {
-                    "step_id": sid,
-                    "score": round(score, 3),
-                    "title": body.splitlines()[0],
-                }
-                for sid, score, body in hits
-            ]
-        }
+        return {"hits": hits_as_dicts(hits)}
 
     if name == "decide_action":
         completed = set(args.get("completed") or [])

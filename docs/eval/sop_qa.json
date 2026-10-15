@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "id": "fasten",
+      "query": "high risk fastening with screwdriver",
+      "expect": ["STEP-06"]
+    },
+    {
+      "id": "put-display",
+      "query": "where do I put the display",
+      "expect": ["STEP-10", "STEP-09"]
+    },
+    {
+      "id": "take-camera",
+      "query": "pick up the camera sensor module",
+      "expect": ["STEP-02"]
+    },
+    {
+      "id": "align",
+      "query": "align camera with camera module fixture pins",
+      "expect": ["STEP-03"]
+    },
+    {
+      "id": "take-screw",
+      "query": "pick M2 screw for camera mount",
+      "expect": ["STEP-05"]
+    },
+    {
+      "id": "put-cm",
+      "query": "place assembled camera module in staging",
+      "expect": ["STEP-07"]
+    },
+    {
+      "id": "return-driver",
+      "query": "return screwdriver to tool tray",
+      "expect": ["STEP-08"]
+    },
+    {
+      "id": "take-cm",
+      "query": "take raspberry pi camera module housing",
+      "expect": ["STEP-01"]
+    },
+    {
+      "id": "hands-risk",
+      "query": "shared bench keep hands clear during fastening",
+      "expect": ["STEP-06"]
+    },
+    {
+      "id": "take-display",
+      "query": "pick up display module",
+      "expect": ["STEP-09"]
+    }
+  ]
+}
