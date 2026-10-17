@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "interior",
+      "query": "attach interior to chassis",
+      "expect": ["STEP-01"]
+    },
+    {
+      "id": "cabin",
+      "query": "attach cabin to interior",
+      "expect": ["STEP-02"]
+    },
+    {
+      "id": "body",
+      "query": "attach body chassis",
+      "expect": ["STEP-03"]
+    },
+    {
+      "id": "roof",
+      "query": "attach roof to cabin",
+      "expect": ["STEP-04"]
+    },
+    {
+      "id": "arm-boom-risk",
+      "query": "high risk join arm and boom hands clear",
+      "expect": ["STEP-06"]
+    },
+    {
+      "id": "connector-chassis",
+      "query": "attach arm connector to chassis",
+      "expect": ["STEP-08"]
+    }
+  ]
+}

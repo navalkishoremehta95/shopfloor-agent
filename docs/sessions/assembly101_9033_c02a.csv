@@ -1,0 +1,21 @@
+t,action,hands_clear,src_label
+241.90,attach interior chassis,true,correct
+291.20,attach interior chassis,true,correct
+334.63,attach body chassis,true,mistake
+358.30,attach cabin interior,true,mistake
+393.53,attach cabin interior,true,correct
+395.47,attach body chassis,true,correct
+420.50,attach roof cabin,true,correct
+448.10,attach arm bucket,true,correct
+469.93,attach arm boom,true,correct
+488.60,attach arm connector chassis,true,mistake
+561.60,attach arm connector boom,false,mistake
+617.73,attach arm connector chassis,true,correct
+661.17,attach arm connector boom,true,correct
+688.03,attach arm connector chassis,true,correct
+717.57,attach arm connector chassis,true,correct
+727.67,attach arm connector boom,true,correct
+741.13,attach arm connector chassis,true,correct
+781.47,attach arm boom,true,correct
+813.37,attach bumper body,true,correct
+857.93,attach wheel chassis,true,correct

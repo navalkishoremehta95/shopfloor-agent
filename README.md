@@ -88,9 +88,13 @@ python -m shopfloor eval-retrieve
 python -m shopfloor decide --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
 python -m shopfloor next --done STEP-01,STEP-02,STEP-03,STEP-04 --hands-clear
 python -m shopfloor replay docs/sessions/session_m3_actions.csv
+python -m shopfloor --sop docs/sop_samples/assembly101_toy_subset.md replay docs/sessions/assembly101_9033_c02a.csv
+python -m shopfloor --sop docs/sop_samples/assembly101_toy_subset.md eval-retrieve --cases docs/eval/assembly101_qa.json
 set OPENAI_API_KEY=...
 python -m shopfloor ask "Can STEP-06 start if STEP-01..05 are done and hands are clear?"
 ```
+
+Cross-domain check uses a derived [Assembly101](https://assembly-101.github.io/) mistake timeline (CC BY-NC 4.0). Import: `python scripts/import_assembly101.py …`
 
 ## Authors
 
@@ -98,4 +102,4 @@ Naval Kishore Mehta · [Arvind](https://github.com/arvindsihag)
 
 ## License
 
-MIT (code). M3-HRC dataset: CC BY-NC 4.0.
+MIT (code). M³-HRC / Assembly101 annotations: CC BY-NC 4.0 (attribution required; research use).

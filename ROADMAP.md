@@ -22,14 +22,16 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | `shopfloor/rag.py` | Hybrid retrieve + citations + eval | done |
 | `shopfloor/api.py` | FastAPI `/retrieve` `/decide` `/next` | done |
 | Docker + GitHub Actions | Image + pytest/eval CI gate | done |
+| Assembly101 validation | Public toy SOP + mistake replay | done |
 | — | Real M³-HRC labels under `data/` | next |
 | — | ROS 2 bridge | later |
 
 ## Data
 
 - [M³-HRC on Hugging Face](https://huggingface.co/datasets/ArvindSihag/M3_Multimodal_Human_Robot_Collaboration_Dataset) (CC BY-NC 4.0)
-- Keep downloads in `data/` (gitignored)
-- Repo ships derived SOP markdown + a small sample session JSON
+- [Assembly101 mistake annotations](https://github.com/assembly-101/assembly101-mistake-detection) (CC BY-NC 4.0) — cross-domain validation
+- Keep large downloads in `data/` (gitignored)
+- Repo ships derived SOP markdown + small session CSV/JSON
 
 ## Citation
 

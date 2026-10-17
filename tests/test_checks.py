@@ -6,6 +6,7 @@ from shopfloor import ShopContext, WorkOrder, can_start, complete_step, parse_so
 from shopfloor.decide import decide
 from shopfloor.map_actions import map_action_to_step
 from shopfloor.replay import load_session, replay, replay_report
+from shopfloor.rag import eval_retrieve
 from shopfloor.tools import TOOL_SPECS, run_tool
 
 
@@ -201,3 +202,13 @@ def test_api_retrieve_and_decide():
         },
     )
     assert d.json()["decision"] == "WAIT"
+
+def test_assembly101_wrong_order_guide():
+    sop = ROOT / "docs" / "sop_samples" / "assembly101_toy_subset.md"
+    session = ROOT / "docs" / "sessions" / "assembly101_9033_c02a.csv"
+    steps = parse_sop(sop)
+    report = replay_report(steps, load_session(session))
+    assert report.counts.get("GUIDE", 0) >= 1
+    assert "STEP-01" in report.completed
+    ev = eval_retrieve(sop, ROOT / "docs" / "eval" / "assembly101_qa.json", top_k=3)
+    assert ev["hit_at_1"] >= 0.8
