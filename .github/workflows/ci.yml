@@ -17,5 +17,5 @@ jobs:
         run: pip install -r requirements.txt
       - name: Pytest
         run: python -m pytest -q
-      - name: Retrieve eval gate
-        run: python -m shopfloor eval-retrieve --min-hit-at-1 0.7
+      - name: Eval suite gate
+        run: python -m shopfloor eval --min-hit-at-1 0.7

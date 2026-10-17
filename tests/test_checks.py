@@ -212,3 +212,17 @@ def test_assembly101_wrong_order_guide():
     assert "STEP-01" in report.completed
     ev = eval_retrieve(sop, ROOT / "docs" / "eval" / "assembly101_qa.json", top_k=3)
     assert ev["hit_at_1"] >= 0.8
+
+def test_eval_suite_summary():
+    from shopfloor.eval_suite import run_suite
+
+    suite = run_suite(
+        miam_sop=ROOT / "docs" / "sop_samples" / "miam_assembly_subset.md",
+        miam_cases=ROOT / "docs" / "eval" / "sop_qa.json",
+        a101_sop=ROOT / "docs" / "sop_samples" / "assembly101_toy_subset.md",
+        a101_cases=ROOT / "docs" / "eval" / "assembly101_qa.json",
+        a101_session=ROOT / "docs" / "sessions" / "assembly101_9033_c02a.csv",
+    )
+    assert suite["summary"]["miam_retrieve_hit_at_1"] >= 0.9
+    assert suite["summary"]["assembly101_retrieve_hit_at_1"] >= 0.9
+    assert suite["summary"]["assembly101_replay_guide_rate"] > 0

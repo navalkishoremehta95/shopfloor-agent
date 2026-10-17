@@ -1,0 +1,432 @@
+{
+  "summary": {
+    "miam_retrieve_hit_at_1": 1.0,
+    "miam_retrieve_mrr": 1.0,
+    "assembly101_retrieve_hit_at_1": 1.0,
+    "assembly101_retrieve_mrr": 1.0,
+    "assembly101_replay_guide_rate": 0.1,
+    "assembly101_mistake_f1": 0.667
+  },
+  "retrieve_miam": {
+    "task": "retrieve",
+    "sop": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\sop_samples\\miam_assembly_subset.md",
+    "cases": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\eval\\sop_qa.json",
+    "params": {
+      "top_k": 3,
+      "use_embeddings": false,
+      "lexical_weight": 0.65,
+      "dense": "char-3gram"
+    },
+    "metrics": {
+      "n": 10,
+      "hit_at_1": 1.0,
+      "hit_at_k": 1.0,
+      "mrr": 1.0,
+      "fail_count": 0
+    },
+    "failures": [],
+    "cases_detail": [
+      {
+        "id": "fasten",
+        "query": "high risk fastening with screwdriver",
+        "expect": [
+          "STEP-06"
+        ],
+        "got": [
+          "STEP-06",
+          "STEP-08",
+          "STEP-04"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.77,
+          0.205,
+          0.198
+        ]
+      },
+      {
+        "id": "put-display",
+        "query": "where do I put the display",
+        "expect": [
+          "STEP-10",
+          "STEP-09"
+        ],
+        "got": [
+          "STEP-10",
+          "STEP-09",
+          "STEP-07"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.706,
+          0.428,
+          0.405
+        ]
+      },
+      {
+        "id": "take-camera",
+        "query": "pick up the camera sensor module",
+        "expect": [
+          "STEP-02"
+        ],
+        "got": [
+          "STEP-02",
+          "STEP-01",
+          "STEP-09"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.817,
+          0.627,
+          0.447
+        ]
+      },
+      {
+        "id": "align",
+        "query": "align camera with camera module fixture pins",
+        "expect": [
+          "STEP-03"
+        ],
+        "got": [
+          "STEP-03",
+          "STEP-02",
+          "STEP-07"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.816,
+          0.287,
+          0.284
+        ]
+      },
+      {
+        "id": "take-screw",
+        "query": "pick M2 screw for camera mount",
+        "expect": [
+          "STEP-05"
+        ],
+        "got": [
+          "STEP-05",
+          "STEP-02",
+          "STEP-01"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.822,
+          0.334,
+          0.31
+        ]
+      },
+      {
+        "id": "put-cm",
+        "query": "place assembled camera module in staging",
+        "expect": [
+          "STEP-07"
+        ],
+        "got": [
+          "STEP-07",
+          "STEP-03",
+          "STEP-02"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.825,
+          0.345,
+          0.338
+        ]
+      },
+      {
+        "id": "return-driver",
+        "query": "return screwdriver to tool tray",
+        "expect": [
+          "STEP-08"
+        ],
+        "got": [
+          "STEP-08",
+          "STEP-04",
+          "STEP-06"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.828,
+          0.611,
+          0.234
+        ]
+      },
+      {
+        "id": "take-cm",
+        "query": "take raspberry pi camera module housing",
+        "expect": [
+          "STEP-01"
+        ],
+        "got": [
+          "STEP-01",
+          "STEP-02",
+          "STEP-03"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.866,
+          0.445,
+          0.311
+        ]
+      },
+      {
+        "id": "hands-risk",
+        "query": "shared bench keep hands clear during fastening",
+        "expect": [
+          "STEP-06"
+        ],
+        "got": [
+          "STEP-06",
+          "STEP-07",
+          "STEP-03"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.815,
+          0.025,
+          0.022
+        ]
+      },
+      {
+        "id": "take-display",
+        "query": "pick up display module",
+        "expect": [
+          "STEP-09"
+        ],
+        "got": [
+          "STEP-09",
+          "STEP-01",
+          "STEP-02"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.793,
+          0.543,
+          0.541
+        ]
+      }
+    ]
+  },
+  "retrieve_assembly101": {
+    "task": "retrieve",
+    "sop": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\sop_samples\\assembly101_toy_subset.md",
+    "cases": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\eval\\assembly101_qa.json",
+    "params": {
+      "top_k": 3,
+      "use_embeddings": false,
+      "lexical_weight": 0.65,
+      "dense": "char-3gram"
+    },
+    "metrics": {
+      "n": 6,
+      "hit_at_1": 1.0,
+      "hit_at_k": 1.0,
+      "mrr": 1.0,
+      "fail_count": 0
+    },
+    "failures": [],
+    "cases_detail": [
+      {
+        "id": "interior",
+        "query": "attach interior to chassis",
+        "expect": [
+          "STEP-01"
+        ],
+        "got": [
+          "STEP-01",
+          "STEP-02",
+          "STEP-08"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.89,
+          0.612,
+          0.609
+        ]
+      },
+      {
+        "id": "cabin",
+        "query": "attach cabin to interior",
+        "expect": [
+          "STEP-02"
+        ],
+        "got": [
+          "STEP-02",
+          "STEP-01",
+          "STEP-04"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.81,
+          0.634,
+          0.598
+        ]
+      },
+      {
+        "id": "body",
+        "query": "attach body chassis",
+        "expect": [
+          "STEP-03"
+        ],
+        "got": [
+          "STEP-03",
+          "STEP-01",
+          "STEP-08"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.779,
+          0.614,
+          0.583
+        ]
+      },
+      {
+        "id": "roof",
+        "query": "attach roof to cabin",
+        "expect": [
+          "STEP-04"
+        ],
+        "got": [
+          "STEP-04",
+          "STEP-02",
+          "STEP-01"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.793,
+          0.59,
+          0.322
+        ]
+      },
+      {
+        "id": "arm-boom-risk",
+        "query": "high risk join arm and boom hands clear",
+        "expect": [
+          "STEP-06"
+        ],
+        "got": [
+          "STEP-06",
+          "STEP-07",
+          "STEP-05"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.712,
+          0.263,
+          0.135
+        ]
+      },
+      {
+        "id": "connector-chassis",
+        "query": "attach arm connector to chassis",
+        "expect": [
+          "STEP-08"
+        ],
+        "got": [
+          "STEP-08",
+          "STEP-07",
+          "STEP-01"
+        ],
+        "hit_at_1": true,
+        "hit_at_k": true,
+        "mrr": 1.0,
+        "scores": [
+          0.835,
+          0.716,
+          0.507
+        ]
+      }
+    ]
+  },
+  "replay_assembly101": {
+    "task": "replay",
+    "sop": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\sop_samples\\assembly101_toy_subset.md",
+    "session": "C:\\Users\\mena\\Documents\\shopfloor-agent\\docs\\sessions\\assembly101_9033_c02a.csv",
+    "params": {
+      "map": "action\u2192STEP token overlap",
+      "decide": "ACT|WAIT|GUIDE"
+    },
+    "metrics": {
+      "n_events": 20,
+      "n_steps_completed": 8,
+      "act_rate": 0.9,
+      "wait_rate": 0.0,
+      "guide_rate": 0.1,
+      "violation_findings": 2,
+      "completed": [
+        "STEP-01",
+        "STEP-02",
+        "STEP-03",
+        "STEP-04",
+        "STEP-05",
+        "STEP-06",
+        "STEP-07",
+        "STEP-08"
+      ],
+      "counts": {
+        "ACT": 18,
+        "WAIT": 0,
+        "GUIDE": 2
+      }
+    },
+    "label_agreement": {
+      "n_labeled": 20,
+      "tp": 2,
+      "fp": 0,
+      "tn": 16,
+      "fn": 2,
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "note": "mistake/wrong-order labels vs GUIDE|WAIT (when src_label present)"
+    },
+    "findings": [
+      {
+        "t": 334.63,
+        "step": "STEP-03",
+        "reasons": [
+          "missing: STEP-02"
+        ]
+      },
+      {
+        "t": 488.6,
+        "step": "STEP-08",
+        "reasons": [
+          "missing: STEP-07"
+        ]
+      }
+    ]
+  }
+}

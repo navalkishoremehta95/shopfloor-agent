@@ -11,13 +11,23 @@ from . import ShopContext, WorkOrder, can_start, parse_sop
 from .decide import decide
 from .map_actions import map_action_to_step
 from .next import ready_steps
-from .rag import eval_retrieve, hits_as_dicts, hybrid_retrieve
+from .eval_suite import (
+    eval_retrieve_full,
+    eval_replay_full,
+    format_summary,
+    run_suite,
+)
+from .rag import hits_as_dicts, hybrid_retrieve
 from .replay import load_session, report_as_dict, replay_report
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOP = ROOT / "docs" / "sop_samples" / "miam_assembly_subset.md"
 DEFAULT_EVAL = ROOT / "docs" / "eval" / "sop_qa.json"
+A101_SOP = ROOT / "docs" / "sop_samples" / "assembly101_toy_subset.md"
+A101_EVAL = ROOT / "docs" / "eval" / "assembly101_qa.json"
+A101_SESSION = ROOT / "docs" / "sessions" / "assembly101_9033_c02a.csv"
+RESULTS = ROOT / "docs" / "eval" / "results" / "latest.json"
 
 
 def _cmd_check(args: argparse.Namespace) -> int:
@@ -43,9 +53,39 @@ def _cmd_retrieve(args: argparse.Namespace) -> int:
 
 
 def _cmd_eval_retrieve(args: argparse.Namespace) -> int:
-    report = eval_retrieve(args.sop, args.cases, top_k=args.top_k)
+    report = eval_retrieve_full(args.sop, args.cases, top_k=args.top_k)
     print(json.dumps(report, indent=2))
-    return 0 if report["hit_at_1"] >= args.min_hit_at_1 else 1
+    return 0 if report["metrics"]["hit_at_1"] >= args.min_hit_at_1 else 1
+
+
+def _cmd_eval_replay(args: argparse.Namespace) -> int:
+    sop = args.sop
+    if "assembly101" in Path(args.session).name and Path(args.sop) == DEFAULT_SOP:
+        sop = A101_SOP
+    report = eval_replay_full(sop, args.session)
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+def _cmd_eval(args: argparse.Namespace) -> int:
+    suite = run_suite(
+        miam_sop=ROOT / "docs" / "sop_samples" / "miam_assembly_subset.md",
+        miam_cases=DEFAULT_EVAL,
+        a101_sop=A101_SOP,
+        a101_cases=A101_EVAL,
+        a101_session=A101_SESSION,
+        top_k=args.top_k,
+    )
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(suite, indent=2), encoding="utf-8")
+    print(format_summary(suite))
+    print(f"wrote {out}")
+    ok = (
+        suite["summary"]["miam_retrieve_hit_at_1"] >= args.min_hit_at_1
+        and suite["summary"]["assembly101_retrieve_hit_at_1"] >= args.min_hit_at_1
+    )
+    return 0 if ok else 1
 
 
 def _cmd_replay(args: argparse.Namespace) -> int:
@@ -141,11 +181,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_ret.set_defaults(func=_cmd_retrieve)
 
-    p_eval = sub.add_parser("eval-retrieve", help="run SOP QA retrieve eval")
+    p_eval = sub.add_parser("eval-retrieve", help="retrieve metrics (hit@1, hit@k, MRR)")
     p_eval.add_argument("--cases", type=Path, default=DEFAULT_EVAL)
     p_eval.add_argument("--top-k", type=int, default=3)
     p_eval.add_argument("--min-hit-at-1", type=float, default=0.7)
     p_eval.set_defaults(func=_cmd_eval_retrieve)
+
+    p_eval_r = sub.add_parser("eval-replay", help="replay compliance + label agreement")
+    p_eval_r.add_argument("session", type=Path, nargs="?", default=A101_SESSION)
+    p_eval_r.set_defaults(func=_cmd_eval_replay)
+
+    p_eval_all = sub.add_parser("eval", help="full suite + write results JSON")
+    p_eval_all.add_argument("--top-k", type=int, default=3)
+    p_eval_all.add_argument("--min-hit-at-1", type=float, default=0.7)
+    p_eval_all.add_argument("--out", type=Path, default=RESULTS)
+    p_eval_all.set_defaults(func=_cmd_eval)
 
     p_rep = sub.add_parser("replay", help="replay a session JSON (action or step labels)")
     p_rep.add_argument("session", type=Path)
