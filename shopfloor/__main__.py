@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from . import ShopContext, WorkOrder, can_start, parse_sop
+from .bridge import from_decision, to_ros_fields
 from .decide import decide
 from .map_actions import map_action_to_step
 from .next import ready_steps
@@ -96,12 +97,11 @@ def _cmd_replay(args: argparse.Namespace) -> int:
     return 0 if report.counts.get("WAIT", 0) + report.counts.get("GUIDE", 0) == 0 else 1
 
 
-def _cmd_decide(args: argparse.Namespace) -> int:
+def _resolve_decision(args: argparse.Namespace):
     steps = parse_sop(args.sop)
     completed = {s.strip() for s in args.done.split(",") if s.strip()}
     order = WorkOrder(id="WO-cli", completed=completed)
     ctx = ShopContext(hands_clear=args.hands_clear)
-
     step_id = args.step
     raw_action = args.action
     map_score = 1.0
@@ -109,6 +109,11 @@ def _cmd_decide(args: argparse.Namespace) -> int:
         step_id, map_score = map_action_to_step(raw_action, steps)
     step = steps.get(step_id) if step_id else None
     d = decide(step, order, ctx, raw_action=raw_action)
+    return d, map_score
+
+
+def _cmd_decide(args: argparse.Namespace) -> int:
+    d, map_score = _resolve_decision(args)
     print(
         json.dumps(
             {
@@ -121,6 +126,13 @@ def _cmd_decide(args: argparse.Namespace) -> int:
             indent=2,
         )
     )
+    return 0 if d.kind == "ACT" else 1
+
+
+def _cmd_emit(args: argparse.Namespace) -> int:
+    d, _ = _resolve_decision(args)
+    cmd = from_decision(d)
+    print(json.dumps(to_ros_fields(cmd), indent=2))
     return 0 if d.kind == "ACT" else 1
 
 
@@ -207,6 +219,13 @@ def main(argv: list[str] | None = None) -> int:
     p_dec.add_argument("--done", default="", help="comma-separated completed step ids")
     p_dec.add_argument("--hands-clear", action="store_true")
     p_dec.set_defaults(func=_cmd_decide)
+
+    p_emit = sub.add_parser("emit", help="ROS-ready command JSON for one observation")
+    p_emit.add_argument("--step", default=None, help="STEP-06")
+    p_emit.add_argument("--action", default=None, help="free-text action label")
+    p_emit.add_argument("--done", default="", help="comma-separated completed step ids")
+    p_emit.add_argument("--hands-clear", action="store_true")
+    p_emit.set_defaults(func=_cmd_emit)
 
     p_next = sub.add_parser("next", help="list steps that can start now")
     p_next.add_argument("--done", default="", help="comma-separated completed step ids")

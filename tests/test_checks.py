@@ -226,3 +226,19 @@ def test_eval_suite_summary():
     assert suite["summary"]["miam_retrieve_hit_at_1"] >= 0.9
     assert suite["summary"]["assembly101_retrieve_hit_at_1"] >= 0.9
     assert suite["summary"]["assembly101_replay_guide_rate"] > 0
+
+def test_bridge_emit_fields():
+    from shopfloor import ShopContext, WorkOrder, parse_sop
+    from shopfloor.bridge import from_decision, to_ros_fields
+    from shopfloor.decide import decide
+
+    steps = parse_sop(SOP)
+    d = decide(
+        steps["STEP-06"],
+        WorkOrder(id="WO-b", completed={f"STEP-{i:02d}" for i in range(1, 6)}),
+        ShopContext(hands_clear=False),
+    )
+    fields = to_ros_fields(from_decision(d))
+    assert fields["decision"] == "WAIT"
+    assert fields["command_topic"] == "/shopfloor/command"
+    assert "STEP-06" in fields["step_id"]

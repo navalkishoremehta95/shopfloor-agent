@@ -24,8 +24,9 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | Docker + GitHub Actions | Image + pytest/eval CI gate | done |
 | Assembly101 validation | Public toy SOP + mistake replay | done |
 | `shopfloor eval` | hit@1 / MRR / replay F1 + results JSON | done |
+| `shopfloor/bridge.py` + `ros2/` | Command payload + optional rclpy stub | done |
 | — | Real M³-HRC labels under `data/` | next |
-| — | ROS 2 bridge | later |
+| — | Live ROS 2 / MoveIt on robot PC | later |
 
 ## Data
 

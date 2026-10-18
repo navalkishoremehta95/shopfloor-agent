@@ -88,6 +88,7 @@ python -m shopfloor eval
 python -m shopfloor eval-retrieve
 python -m shopfloor eval-replay
 python -m shopfloor decide --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
+python -m shopfloor emit --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --hands-clear
 python -m shopfloor next --done STEP-01,STEP-02,STEP-03,STEP-04 --hands-clear
 python -m shopfloor replay docs/sessions/session_m3_actions.csv
 python -m shopfloor --sop docs/sop_samples/assembly101_toy_subset.md replay docs/sessions/assembly101_9033_c02a.csv
@@ -96,6 +97,8 @@ python -m shopfloor ask "Can STEP-06 start if STEP-01..05 are done and hands are
 ```
 
 Cross-domain check uses a derived [Assembly101](https://assembly-101.github.io/) mistake timeline (CC BY-NC 4.0). Import: `python scripts/import_assembly101.py …`
+
+ROS 2 interface stub: `ros2/` (optional `rclpy` node). Dry-run: `python -m shopfloor emit …`
 
 ## Authors
 
