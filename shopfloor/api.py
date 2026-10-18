@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from . import ShopContext, WorkOrder, parse_sop
+from .bridge import from_decision, to_ros_fields
 from .decide import decide
 from .map_actions import map_action_to_step
 from .metrics import log_event
@@ -104,6 +105,23 @@ def api_decide(body: DecideIn) -> dict[str, Any]:
     }
     log_event("decide", {"decision": d.kind, "step_id": d.step_id})
     return out
+
+
+@app.post("/emit")
+def api_emit(body: DecideIn) -> dict[str, Any]:
+    steps = _steps or _load()
+    order = WorkOrder(id="WO-api", completed=set(body.completed))
+    ctx = ShopContext(hands_clear=body.hands_clear)
+    step_id = body.step_id
+    if not step_id and body.action:
+        step_id, _ = map_action_to_step(body.action, steps)
+    step = steps.get(step_id) if step_id else None
+    if body.step_id and step is None:
+        raise HTTPException(status_code=404, detail=f"unknown step: {body.step_id}")
+    d = decide(step, order, ctx, raw_action=body.action)
+    payload = to_ros_fields(from_decision(d))
+    log_event("emit", {"decision": d.kind, "step_id": d.step_id})
+    return payload
 
 
 @app.post("/next")

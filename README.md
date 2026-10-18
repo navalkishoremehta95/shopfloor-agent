@@ -74,7 +74,7 @@ jupyter notebook notebooks/shopfloor_agent.ipynb
 
 ```bash
 uvicorn shopfloor.api:app --reload
-# POST /retrieve  /decide  /next   GET /health
+# POST /retrieve  /decide  /emit  /next   GET /health
 docker build -t shopfloor-agent .
 docker run --rm -p 8000:8000 shopfloor-agent
 ```
