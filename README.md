@@ -3,7 +3,7 @@
 SOP-grounded coordinator for industrial HRC (MIAM / M³-HRC): map actions to the
 procedure graph, enforce safety, retrieve cited context, return **ACT / WAIT / GUIDE**.
 
-See [ROADMAP.md](ROADMAP.md).
+See [ROADMAP.md](ROADMAP.md). Data notes: [docs/SOURCES.md](docs/SOURCES.md).
 
 ## System Architecture
 
