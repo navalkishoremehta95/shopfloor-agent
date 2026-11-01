@@ -92,6 +92,8 @@ python -m shopfloor emit --action "screw screw with screwdriver" --done STEP-01,
 python -m shopfloor next --done STEP-01,STEP-02,STEP-03,STEP-04 --hands-clear
 python -m shopfloor replay docs/sessions/session_m3_actions.csv
 python -m shopfloor import-m3 data/<session> -o data/sessions/<session>.csv
+python -m shopfloor imu data/<session>/lh_imu_data.csv --t 12 --window 5
+python -m shopfloor decide --action "screw screw with screwdriver" --done STEP-01,STEP-02,STEP-03,STEP-04,STEP-05 --imu-left data/<session>/lh_imu_data.csv --imu-right data/<session>/rh_imu_data.csv --imu-t 12
 python -m shopfloor --sop docs/sop_samples/assembly101_toy_subset.md replay docs/sessions/assembly101_9033_c02a.csv
 set OPENAI_API_KEY=...
 python -m shopfloor ask "Can STEP-06 start if STEP-01..05 are done and hands are clear?"

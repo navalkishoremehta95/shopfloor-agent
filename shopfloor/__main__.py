@@ -18,6 +18,7 @@ from .eval_suite import (
     format_summary,
     run_suite,
 )
+from .imu import hands_window, load_csv, window_stats
 from .m3_import import load_m3_events, write_session
 from .rag import hits_as_dicts, hybrid_retrieve
 from .replay import load_session, report_as_dict, replay_report
@@ -98,11 +99,28 @@ def _cmd_replay(args: argparse.Namespace) -> int:
     return 0 if report.counts.get("WAIT", 0) + report.counts.get("GUIDE", 0) == 0 else 1
 
 
+def _imu_summary(args: argparse.Namespace) -> dict | None:
+    left = getattr(args, "imu_left", None)
+    right = getattr(args, "imu_right", None)
+    if not left and not right:
+        return None
+    return hands_window(
+        left,
+        right,
+        t=args.imu_t,
+        window=args.imu_window,
+    )
+
+
 def _resolve_decision(args: argparse.Namespace):
     steps = parse_sop(args.sop)
     completed = {s.strip() for s in args.done.split(",") if s.strip()}
     order = WorkOrder(id="WO-cli", completed=completed)
-    ctx = ShopContext(hands_clear=args.hands_clear)
+    imu = _imu_summary(args)
+    hands = args.hands_clear
+    if imu is not None and imu["hands_clear"] is not None:
+        hands = bool(imu["hands_clear"])
+    ctx = ShopContext(hands_clear=hands)
     step_id = args.step
     raw_action = args.action
     map_score = 1.0
@@ -110,31 +128,50 @@ def _resolve_decision(args: argparse.Namespace):
         step_id, map_score = map_action_to_step(raw_action, steps)
     step = steps.get(step_id) if step_id else None
     d = decide(step, order, ctx, raw_action=raw_action)
-    return d, map_score
+    return d, map_score, imu
 
 
 def _cmd_decide(args: argparse.Namespace) -> int:
-    d, map_score = _resolve_decision(args)
-    print(
-        json.dumps(
-            {
-                "decision": d.kind,
-                "step_id": d.step_id,
-                "map_score": round(map_score, 3),
-                "reasons": d.reasons,
-                "message": d.message,
-            },
-            indent=2,
-        )
-    )
+    d, map_score, imu = _resolve_decision(args)
+    payload = {
+        "decision": d.kind,
+        "step_id": d.step_id,
+        "map_score": round(map_score, 3),
+        "reasons": d.reasons,
+        "message": d.message,
+    }
+    if imu is not None:
+        payload["imu"] = imu
+    print(json.dumps(payload, indent=2))
     return 0 if d.kind == "ACT" else 1
 
 
 def _cmd_emit(args: argparse.Namespace) -> int:
-    d, _ = _resolve_decision(args)
+    d, _, imu = _resolve_decision(args)
     cmd = from_decision(d)
-    print(json.dumps(to_ros_fields(cmd), indent=2))
+    payload = to_ros_fields(cmd)
+    if imu is not None:
+        payload["imu_moving"] = imu["moving"]
+    print(json.dumps(payload, indent=2))
     return 0 if d.kind == "ACT" else 1
+
+
+def _cmd_imu(args: argparse.Namespace) -> int:
+    if args.src and not args.left and not args.right:
+        summary = window_stats(load_csv(args.src), args.t, args.window)
+    else:
+        summary = hands_window(
+            args.left,
+            args.right,
+            t=args.t,
+            window=args.window,
+        )
+    print(json.dumps(summary, indent=2))
+    if "n" in summary:
+        empty = summary["n"] == 0
+    else:
+        empty = all(part["n"] == 0 for part in summary["hands"].values())
+    return 1 if empty else 0
 
 
 def _cmd_next(args: argparse.Namespace) -> int:
@@ -226,6 +263,10 @@ def main(argv: list[str] | None = None) -> int:
     p_dec.add_argument("--action", default=None, help="free-text action label")
     p_dec.add_argument("--done", default="", help="comma-separated completed step ids")
     p_dec.add_argument("--hands-clear", action="store_true")
+    p_dec.add_argument("--imu-left", type=Path, default=None)
+    p_dec.add_argument("--imu-right", type=Path, default=None)
+    p_dec.add_argument("--imu-t", type=float, default=0.0)
+    p_dec.add_argument("--imu-window", type=float, default=5.0)
     p_dec.set_defaults(func=_cmd_decide)
 
     p_emit = sub.add_parser("emit", help="ROS-ready command JSON for one observation")
@@ -233,7 +274,19 @@ def main(argv: list[str] | None = None) -> int:
     p_emit.add_argument("--action", default=None, help="free-text action label")
     p_emit.add_argument("--done", default="", help="comma-separated completed step ids")
     p_emit.add_argument("--hands-clear", action="store_true")
+    p_emit.add_argument("--imu-left", type=Path, default=None)
+    p_emit.add_argument("--imu-right", type=Path, default=None)
+    p_emit.add_argument("--imu-t", type=float, default=0.0)
+    p_emit.add_argument("--imu-window", type=float, default=5.0)
     p_emit.set_defaults(func=_cmd_emit)
+
+    p_imu = sub.add_parser("imu", help="wrist motion over a short window")
+    p_imu.add_argument("src", type=Path, nargs="?", default=None, help="one IMU csv")
+    p_imu.add_argument("--left", type=Path, default=None)
+    p_imu.add_argument("--right", type=Path, default=None)
+    p_imu.add_argument("--t", type=float, required=True)
+    p_imu.add_argument("--window", type=float, default=5.0)
+    p_imu.set_defaults(func=_cmd_imu)
 
     p_next = sub.add_parser("next", help="list steps that can start now")
     p_next.add_argument("--done", default="", help="comma-separated completed step ids")

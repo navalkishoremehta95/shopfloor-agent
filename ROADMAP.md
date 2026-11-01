@@ -26,6 +26,7 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | `shopfloor eval` | hit@1 / MRR / replay F1 + results JSON | done |
 | `shopfloor/bridge.py` + `ros2/` | Command payload + optional rclpy stub | done |
 | `import-m3` | Local VIA `c1_action_annotations.csv` → session CSV | done |
+| `shopfloor/imu.py` | Wrist window → hands_clear for decide / `ask` | done |
 | — | Replay one extracted session under `data/` | next |
 | — | Live ROS 2 / MoveIt on robot PC | later |
 
