@@ -18,6 +18,7 @@ from .eval_suite import (
     format_summary,
     run_suite,
 )
+from .m3_import import load_m3_events, write_session
 from .rag import hits_as_dicts, hybrid_retrieve
 from .replay import load_session, report_as_dict, replay_report
 
@@ -154,6 +155,13 @@ def _cmd_next(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_import_m3(args: argparse.Namespace) -> int:
+    events = load_m3_events(args.src)
+    out = write_session(events, args.out)
+    print(json.dumps({"events": len(events), "out": str(out)}))
+    return 0 if events else 1
+
+
 def _cmd_ask(args: argparse.Namespace) -> int:
     from .agent import ask
 
@@ -231,6 +239,20 @@ def main(argv: list[str] | None = None) -> int:
     p_next.add_argument("--done", default="", help="comma-separated completed step ids")
     p_next.add_argument("--hands-clear", action="store_true")
     p_next.set_defaults(func=_cmd_next)
+
+    p_m3 = sub.add_parser(
+        "import-m3",
+        help="local M3-HRC VIA csv or session dir -> shopfloor CSV",
+    )
+    p_m3.add_argument("src", type=Path, help="session folder or c1_action_annotations.csv")
+    p_m3.add_argument(
+        "-o",
+        "--out",
+        type=Path,
+        required=True,
+        help="output CSV (keep under data/)",
+    )
+    p_m3.set_defaults(func=_cmd_import_m3)
 
     p_ask = sub.add_parser("ask", help="LLM + tools (needs OPENAI_API_KEY)")
     p_ask.add_argument("question")

@@ -227,6 +227,56 @@ def test_eval_suite_summary():
     assert suite["summary"]["assembly101_retrieve_hit_at_1"] >= 0.9
     assert suite["summary"]["assembly101_replay_guide_rate"] > 0
 
+def test_m3_via_import_sorts_and_maps():
+    import csv
+    import json
+    from shopfloor.m3_import import events_from_rows, load_m3_events, write_session
+
+    rows = [
+        {
+            "filename": "c1.mp4",
+            "region_shape_attributes": json.dumps(
+                {"name": "temporal", "start": 6.0, "end": 8.0}
+            ),
+            "region_attributes": json.dumps(
+                {"action": "screw_screw_with_screwdriver", "hands_clear": False}
+            ),
+        },
+        {
+            "filename": "01_take_rpi_CM.mp4",
+            "temporal_segment_start": "0.5",
+            "metadata": json.dumps({"label": "ignored-if-filename-only"}),
+        },
+    ]
+    # second row: metadata label should win over the filename
+    events = events_from_rows(rows)
+    assert events[0]["t"] == "0.50"
+    assert events[0]["action"] == "ignored-if-filename-only"
+    assert events[1]["action"] == "screw screw with screwdriver"
+    assert events[1]["hands_clear"] == "false"
+
+    folder = ROOT / "data" / "_m3_fixture"
+    folder.mkdir(parents=True, exist_ok=True)
+    ann = folder / "c1_action_annotations.csv"
+    with ann.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "filename",
+                "region_shape_attributes",
+                "region_attributes",
+            ],
+        )
+        writer.writeheader()
+        writer.writerow(rows[0])
+    loaded = load_m3_events(folder)
+    assert loaded[0]["action"] == "screw screw with screwdriver"
+    out = write_session(loaded, folder / "session.csv")
+    text = out.read_text(encoding="utf-8")
+    assert "screw screw with screwdriver" in text
+    assert "hands_clear" in text
+
+
 def test_bridge_emit_fields():
     from shopfloor import ShopContext, WorkOrder, parse_sop
     from shopfloor.bridge import from_decision, to_ros_fields
