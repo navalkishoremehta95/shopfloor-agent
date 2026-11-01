@@ -14,7 +14,8 @@ from .tools import openai_tools, run_tool
 SYSTEM = (
     "You assist with procedure-compliant industrial assembly (MIAM / M3-HRC). "
     "Use tools for SOP facts and ACT/WAIT/GUIDE decisions. "
-    "Do not invent safety outcomes; trust tool results."
+    "If the question includes IMU csv paths, call summarize_imu and "
+    "pass hands_clear into decide_action. Trust the tool result."
 )
 
 

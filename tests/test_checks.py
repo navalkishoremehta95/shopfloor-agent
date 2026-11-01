@@ -277,6 +277,65 @@ def test_m3_via_import_sorts_and_maps():
     assert "hands_clear" in text
 
 
+def test_imu_window_sets_hands_clear():
+    import csv
+    from shopfloor.imu import hands_window, load_csv, window_stats
+    from shopfloor.tools import run_tool
+
+    path = ROOT / "data" / "_imu_fixture.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "relative_time",
+                "Acceleration X(g)",
+                "Acceleration Y(g)",
+                "Acceleration Z(g)",
+                "Angular velocity X(°/s)",
+                "Angular velocity Y(°/s)",
+                "Angular velocity Z(°/s)",
+            ],
+        )
+        writer.writeheader()
+        for i, az in enumerate([1.0, 1.0, 1.0, 1.0, 0.2, 1.8, 0.1, 1.9]):
+            writer.writerow(
+                {
+                    "relative_time": i,
+                    "Acceleration X(g)": 0,
+                    "Acceleration Y(g)": 0,
+                    "Acceleration Z(g)": az,
+                    "Angular velocity X(°/s)": 0,
+                    "Angular velocity Y(°/s)": 0,
+                    "Angular velocity Z(°/s)": 0,
+                }
+            )
+
+    still = window_stats(load_csv(path), t=3, window=5)
+    assert still["hands_clear"] is True
+    moving = window_stats(load_csv(path), t=7, window=3)
+    assert moving["moving"] is True
+    both = hands_window(path, path, t=7, window=3)
+    assert both["hands_clear"] is False
+
+    steps = parse_sop(SOP)
+    out = run_tool(
+        "decide_action",
+        {
+            "action": "screw screw with screwdriver",
+            "completed": [f"STEP-{i:02d}" for i in range(1, 6)],
+            "hands_clear": True,
+            "left": str(path),
+            "t": 7,
+            "window": 3,
+        },
+        steps=steps,
+        sop_path=SOP,
+    )
+    assert out["decision"] == "WAIT"
+    assert out["imu"]["moving"] is True
+
+
 def test_bridge_emit_fields():
     from shopfloor import ShopContext, WorkOrder, parse_sop
     from shopfloor.bridge import from_decision, to_ros_fields

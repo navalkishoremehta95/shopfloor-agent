@@ -9,6 +9,7 @@ from . import ShopContext, Step, WorkOrder, can_start, complete_step
 from .decide import decide
 from .map_actions import map_action_to_step
 from .next import ready_steps
+from .imu import hands_window
 from .rag import hits_as_dicts, hybrid_retrieve
 
 
@@ -22,6 +23,16 @@ TOOL_SPECS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "summarize_imu",
+        "description": "Wrist IMU window. hands_clear is false when a hand is moving.",
+        "parameters": {
+            "t": {"type": "number"},
+            "window": {"type": "number", "default": 5},
+            "left": {"type": "string", "description": "lh_imu_data.csv"},
+            "right": {"type": "string", "description": "rh_imu_data.csv"},
+        },
+    },
+    {
         "name": "decide_action",
         "description": "Return ACT, WAIT, or GUIDE for a step or free-text action.",
         "parameters": {
@@ -29,6 +40,9 @@ TOOL_SPECS: list[dict[str, Any]] = [
             "action": {"type": "string"},
             "completed": {"type": "array", "items": {"type": "string"}},
             "hands_clear": {"type": "boolean"},
+            "t": {"type": "number"},
+            "left": {"type": "string"},
+            "right": {"type": "string"},
         },
     },
     {
@@ -78,6 +92,8 @@ def openai_tools() -> list[dict[str, Any]]:
         # require only the essentials per tool
         if spec["name"] == "retrieve_sop":
             required = ["query"]
+        elif spec["name"] == "summarize_imu":
+            required = ["t"]
         elif spec["name"] == "decide_action":
             required = ["completed", "hands_clear"]
         elif spec["name"] in {"list_ready_steps"}:
@@ -117,10 +133,36 @@ def run_tool(
         )
         return {"hits": hits_as_dicts(hits)}
 
+    if name == "summarize_imu":
+        try:
+            summary = hands_window(
+                args.get("left") or None,
+                args.get("right") or None,
+                t=float(args["t"]),
+                window=float(args.get("window", 5)),
+            )
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            return {"error": str(exc)}
+        return summary
+
     if name == "decide_action":
         completed = set(args.get("completed") or [])
         order = WorkOrder(id="WO-tool", completed=completed)
-        ctx = ShopContext(hands_clear=bool(args.get("hands_clear", False)))
+        hands = bool(args.get("hands_clear", False))
+        imu = None
+        if args.get("left") or args.get("right"):
+            try:
+                imu = hands_window(
+                    args.get("left") or None,
+                    args.get("right") or None,
+                    t=float(args.get("t", 0)),
+                    window=float(args.get("window", 5)),
+                )
+            except (FileNotFoundError, OSError, ValueError) as exc:
+                return {"error": str(exc)}
+            if imu["hands_clear"] is not None:
+                hands = bool(imu["hands_clear"])
+        ctx = ShopContext(hands_clear=hands)
         step_id = args.get("step_id")
         raw_action = args.get("action")
         map_score = 1.0
@@ -128,13 +170,17 @@ def run_tool(
             step_id, map_score = map_action_to_step(str(raw_action), steps)
         step = steps.get(step_id) if step_id else None
         d = decide(step, order, ctx, raw_action=raw_action)
-        return {
+        out = {
             "decision": d.kind,
             "step_id": d.step_id,
             "map_score": round(map_score, 3),
             "reasons": d.reasons,
             "message": d.message,
+            "hands_clear": hands,
         }
+        if imu is not None:
+            out["imu"] = imu
+        return out
 
     if name == "list_ready_steps":
         order = WorkOrder(
