@@ -137,6 +137,21 @@ def test_replay_action_labels_has_guide_and_wait():
     assert "STEP-10" in report.completed
 
 
+def test_replay_toy_imu_fixture():
+    steps = parse_sop(SOP)
+    session = ROOT / "docs" / "sessions" / "session_m3_actions.csv"
+    imu = ROOT / "docs" / "sessions" / "imu_toy_right.csv"
+    report = replay_report(
+        steps,
+        load_session(session),
+        imu_right=imu,
+        imu_window=3.0,
+    )
+    busy = [e for e in report.events if e.t == 14.0][0]
+    assert busy.decision == "WAIT"
+    assert busy.imu_moving is True
+
+
 def test_replay_imu_overrides_hands_clear():
     import csv
     from shopfloor.replay import SessionEvent

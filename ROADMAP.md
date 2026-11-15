@@ -27,7 +27,10 @@ Rules → Safety → Retrieve → Map → Decide → Replay → CLI
 | `shopfloor/bridge.py` + `ros2/` | Command payload + optional rclpy stub | done |
 | `import-m3` | Local VIA `c1_action_annotations.csv` → session CSV | done |
 | `shopfloor/imu.py` | Wrist window → hands_clear for decide / `ask` | done |
-| — | Replay one extracted session under `data/` | next |
+| API `/imu` | Same window on `/decide` `/emit` | done |
+| `replay --imu-*` | Session walk with wrist override | done |
+| `docs/sessions/imu_toy_right.csv` | Offline IMU fixture for MIAM subset | done |
+| — | Replay one extracted M³-HRC session under `data/` | next |
 | — | Live ROS 2 / MoveIt on robot PC | later |
 
 ## Data
