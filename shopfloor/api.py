@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from . import ShopContext, WorkOrder, parse_sop
 from .bridge import from_decision, to_ros_fields
 from .decide import decide
+from .imu import hands_window, load_csv, window_stats
 from .map_actions import map_action_to_step
 from .metrics import log_event
 from .next import ready_steps
@@ -55,11 +56,38 @@ class DecideIn(BaseModel):
     action: str | None = None
     completed: list[str] = Field(default_factory=list)
     hands_clear: bool = False
+    imu_left: str | None = None
+    imu_right: str | None = None
+    imu_t: float = 0.0
+    imu_window: float = 5.0
 
 
 class NextIn(BaseModel):
     completed: list[str] = Field(default_factory=list)
     hands_clear: bool = False
+
+
+class ImuIn(BaseModel):
+    path: str | None = None
+    left: str | None = None
+    right: str | None = None
+    t: float
+    window: float = 5.0
+
+
+def _hands_and_imu(body: DecideIn) -> tuple[bool, dict[str, Any] | None]:
+    hands = body.hands_clear
+    imu = None
+    if body.imu_left or body.imu_right:
+        imu = hands_window(
+            body.imu_left,
+            body.imu_right,
+            t=body.imu_t,
+            window=body.imu_window,
+        )
+        if imu["hands_clear"] is not None:
+            hands = bool(imu["hands_clear"])
+    return hands, imu
 
 
 @app.get("/health")
@@ -87,7 +115,8 @@ def api_retrieve(body: RetrieveIn) -> dict[str, Any]:
 def api_decide(body: DecideIn) -> dict[str, Any]:
     steps = _steps or _load()
     order = WorkOrder(id="WO-api", completed=set(body.completed))
-    ctx = ShopContext(hands_clear=body.hands_clear)
+    hands, imu = _hands_and_imu(body)
+    ctx = ShopContext(hands_clear=hands)
     step_id = body.step_id
     map_score = 1.0
     if not step_id and body.action:
@@ -102,7 +131,10 @@ def api_decide(body: DecideIn) -> dict[str, Any]:
         "map_score": round(map_score, 3),
         "reasons": d.reasons,
         "message": d.message,
+        "hands_clear": hands,
     }
+    if imu is not None:
+        out["imu"] = imu
     log_event("decide", {"decision": d.kind, "step_id": d.step_id})
     return out
 
@@ -111,7 +143,8 @@ def api_decide(body: DecideIn) -> dict[str, Any]:
 def api_emit(body: DecideIn) -> dict[str, Any]:
     steps = _steps or _load()
     order = WorkOrder(id="WO-api", completed=set(body.completed))
-    ctx = ShopContext(hands_clear=body.hands_clear)
+    hands, imu = _hands_and_imu(body)
+    ctx = ShopContext(hands_clear=hands)
     step_id = body.step_id
     if not step_id and body.action:
         step_id, _ = map_action_to_step(body.action, steps)
@@ -120,8 +153,21 @@ def api_emit(body: DecideIn) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"unknown step: {body.step_id}")
     d = decide(step, order, ctx, raw_action=body.action)
     payload = to_ros_fields(from_decision(d))
+    payload["hands_clear"] = hands
+    if imu is not None:
+        payload["imu_moving"] = imu["moving"]
     log_event("emit", {"decision": d.kind, "step_id": d.step_id})
     return payload
+
+
+@app.post("/imu")
+def api_imu(body: ImuIn) -> dict[str, Any]:
+    try:
+        if body.path and not body.left and not body.right:
+            return window_stats(load_csv(body.path), body.t, body.window)
+        return hands_window(body.left, body.right, t=body.t, window=body.window)
+    except (FileNotFoundError, OSError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/next")

@@ -184,6 +184,7 @@ def test_hybrid_retrieve_citation_and_eval():
     assert report["hit_at_1"] >= 0.7
 
 def test_api_retrieve_and_decide():
+    import csv
     from fastapi.testclient import TestClient
     from shopfloor.api import app
 
@@ -202,6 +203,45 @@ def test_api_retrieve_and_decide():
         },
     )
     assert d.json()["decision"] == "WAIT"
+
+    path = ROOT / "data" / "_imu_api.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "relative_time",
+                "Acceleration X(g)",
+                "Acceleration Y(g)",
+                "Acceleration Z(g)",
+            ],
+        )
+        w.writeheader()
+        for i, az in enumerate([1.0, 1.0, 0.1, 1.9]):
+            w.writerow(
+                {
+                    "relative_time": i,
+                    "Acceleration X(g)": 0,
+                    "Acceleration Y(g)": 0,
+                    "Acceleration Z(g)": az,
+                }
+            )
+    imu = client.post("/imu", json={"path": str(path), "t": 3, "window": 3})
+    assert imu.status_code == 200
+    assert imu.json()["moving"] is True
+    blocked = client.post(
+        "/decide",
+        json={
+            "action": "screw screw with screwdriver",
+            "completed": [f"STEP-{i:02d}" for i in range(1, 6)],
+            "hands_clear": True,
+            "imu_left": str(path),
+            "imu_t": 3,
+            "imu_window": 3,
+        },
+    )
+    assert blocked.json()["decision"] == "WAIT"
+    assert blocked.json()["imu"]["moving"] is True
 
 def test_assembly101_wrong_order_guide():
     sop = ROOT / "docs" / "sop_samples" / "assembly101_toy_subset.md"
