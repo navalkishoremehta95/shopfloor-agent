@@ -94,7 +94,13 @@ def _cmd_eval(args: argparse.Namespace) -> int:
 def _cmd_replay(args: argparse.Namespace) -> int:
     steps = parse_sop(args.sop)
     events = load_session(args.session)
-    report = replay_report(steps, events)
+    report = replay_report(
+        steps,
+        events,
+        imu_left=args.imu_left,
+        imu_right=args.imu_right,
+        imu_window=args.imu_window,
+    )
     print(json.dumps(report_as_dict(report), indent=2))
     return 0 if report.counts.get("WAIT", 0) + report.counts.get("GUIDE", 0) == 0 else 1
 
@@ -256,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
 
     p_rep = sub.add_parser("replay", help="replay a session JSON (action or step labels)")
     p_rep.add_argument("session", type=Path)
+    p_rep.add_argument("--imu-left", type=Path, default=None)
+    p_rep.add_argument("--imu-right", type=Path, default=None)
+    p_rep.add_argument("--imu-window", type=float, default=5.0)
     p_rep.set_defaults(func=_cmd_replay)
 
     p_dec = sub.add_parser("decide", help="ACT / WAIT / GUIDE for one observation")

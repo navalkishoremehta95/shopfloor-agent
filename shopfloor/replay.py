@@ -9,6 +9,7 @@ from typing import Any
 
 from . import ShopContext, Step, WorkOrder, complete_step
 from .decide import Decision, decide
+from .imu import load_csv, window_stats
 from .map_actions import map_action_to_step
 
 
@@ -37,6 +38,8 @@ class EventResult:
     message: str
     reasons: list[str]
     completed_after: list[str]
+    hands_clear: bool = True
+    imu_moving: bool | None = None
 
 
 @dataclass
@@ -111,11 +114,17 @@ def replay_report(
     steps: dict[str, Step],
     events: list[SessionEvent],
     order_id: str = "WO-replay",
+    *,
+    imu_left: str | Path | None = None,
+    imu_right: str | Path | None = None,
+    imu_window: float = 5.0,
 ) -> ReplayReport:
     """Walk events; map actions; decide ACT/WAIT/GUIDE; complete only on ACT."""
     order = WorkOrder(id=order_id)
     report = ReplayReport(order_id=order_id)
     counts = {"ACT": 0, "WAIT": 0, "GUIDE": 0}
+    left_rows = load_csv(imu_left, "left") if imu_left else None
+    right_rows = load_csv(imu_right, "right") if imu_right else None
 
     for ev in events:
         step_id = ev.step
@@ -126,7 +135,19 @@ def replay_report(
             step_id, map_score = map_action_to_step(raw_action, steps)
 
         step = steps.get(step_id) if step_id else None
-        ctx = ShopContext(hands_clear=ev.hands_clear)
+        hands = ev.hands_clear
+        imu_moving = None
+        if left_rows is not None or right_rows is not None:
+            parts = {}
+            if left_rows is not None:
+                parts["left"] = window_stats(left_rows, ev.t, imu_window)
+            if right_rows is not None:
+                parts["right"] = window_stats(right_rows, ev.t, imu_window)
+            flags = [p["moving"] for p in parts.values() if p["moving"] is not None]
+            if flags:
+                imu_moving = any(flags)
+                hands = not imu_moving
+        ctx = ShopContext(hands_clear=hands)
         decision: Decision = decide(step, order, ctx, raw_action=raw_action)
 
         if decision.kind == "ACT" and step is not None:
@@ -151,6 +172,8 @@ def replay_report(
                 message=decision.message,
                 reasons=decision.reasons,
                 completed_after=sorted(order.completed),
+                hands_clear=hands,
+                imu_moving=imu_moving,
             )
         )
 

@@ -136,6 +136,45 @@ def test_replay_action_labels_has_guide_and_wait():
     assert "ACT" in kinds
     assert "STEP-10" in report.completed
 
+
+def test_replay_imu_overrides_hands_clear():
+    import csv
+    from shopfloor.replay import SessionEvent
+
+    path = ROOT / "data" / "_imu_replay.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "relative_time",
+                "Acceleration X(g)",
+                "Acceleration Y(g)",
+                "Acceleration Z(g)",
+            ],
+        )
+        w.writeheader()
+        # quiet early, then motion around t=5 (STEP-06)
+        for i, az in enumerate([1.0, 1.0, 1.0, 1.0, 0.2, 1.8]):
+            w.writerow(
+                {
+                    "relative_time": float(i),
+                    "Acceleration X(g)": 0,
+                    "Acceleration Y(g)": 0,
+                    "Acceleration Z(g)": az,
+                }
+            )
+
+    steps = parse_sop(SOP)
+    events = [
+        SessionEvent(t=float(i), step=f"STEP-{i+1:02d}", hands_clear=True)
+        for i in range(6)
+    ]
+    report = replay_report(steps, events, imu_right=path, imu_window=3.0)
+    assert report.events[5].decision == "WAIT"
+    assert report.events[5].imu_moving is True
+    assert report.events[5].hands_clear is False
+
 def test_ready_steps_and_csv_replay():
     from shopfloor import ShopContext, WorkOrder, parse_sop
     from shopfloor.next import ready_steps
